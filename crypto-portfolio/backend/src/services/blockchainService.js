@@ -1,92 +1,150 @@
 // =============================================================================
-// Service Blockchain - Récupération des données de transaction on-chain
+// Service Blockchain - Recuperation des donnees de transaction on-chain
 // =============================================================================
 // Ce service interroge les APIs des blockchain explorers pour extraire
-// les détails d'une transaction à partir de son hash.
+// les details d'une transaction a partir de son hash.
+// Supporte le filtrage par adresse de reception pour les transactions
+// multi-outputs (notamment Bitcoin).
+//
+// La configuration des blockchains est chargee depuis la table `blockchains`
+// via blockchainManager.js. Le dispatch se fait sur le champ `api_type`.
 
 const axios = require('axios');
-const { API_CONFIG } = require('../config/apis');
+const priceService = require('./priceService');
+const blockchainManager = require('./blockchainManager');
 
 // ---------------------------------------------------------------------------
-// Bitcoin - via Blockchain.com API
+// Bitcoin - via Blockchain.info API
 // ---------------------------------------------------------------------------
-async function getBitcoinTxDetails(txHash) {
+async function getBitcoinTxDetails(txHash, blockchainConfig, recipientAddress = null) {
   try {
-    const url = `${API_CONFIG.bitcoin.baseUrl}/rawtx/${txHash}`;
+    const baseUrl = blockchainConfig.api_url || 'https://blockchain.info';
+    const url = `${baseUrl}/rawtx/${txHash}`;
     const response = await axios.get(url);
     const tx = response.data;
 
-    // Calcul du montant total en sortie (en BTC, l'API retourne en satoshis)
-    const totalOutputBTC = tx.out.reduce((sum, output) => sum + output.value, 0) / 1e8;
-    const feeBTC = tx.fee / 1e8;
+    // ✅ DÉCLARATION AVANT UTILISATION
+    let blockTimestamp = null;
+
+    // ✅ Récupération du timestamp du bloc (source de vérité)
+    if (tx.block_height) {
+      const blockUrl = `${baseUrl}/block-height/${tx.block_height}?format=json`;
+      const blockResponse = await axios.get(blockUrl);
+      const block = blockResponse.data?.blocks?.[0];
+
+      if (block?.time) {
+        blockTimestamp = new Date(block.time * 1000).toISOString();
+      }
+    }
+
+    const totalInput = tx.inputs.reduce(
+      (sum, input) => sum + (input.prev_out?.value || 0),
+      0
+    );
+    const totalOutput = tx.out.reduce(
+      (sum, output) => sum + output.value,
+      0
+    );
+
+    const feeBTC = (totalInput - totalOutput) / 1e8;
+
+    const allOutputs = tx.out.map(output => ({
+      address: output.addr,
+      value: output.value / 1e8,
+      spent: output.spent,
+    }));
+
+    let quantity;
+    let relevantOutputs;
+
+    if (recipientAddress) {
+      const matched = allOutputs.filter(o => o.address === recipientAddress);
+      if (matched.length === 0) {
+        throw new Error("Cette adresse n'a pas recu de fonds dans cette transaction");
+      }
+      quantity = matched.reduce((sum, o) => sum + o.value, 0);
+      relevantOutputs = matched.length;
+    } else {
+      quantity = allOutputs.reduce((sum, o) => sum + o.value, 0);
+      relevantOutputs = allOutputs.length;
+    }
 
     return {
       hash: tx.hash,
-      blockchain: 'BTC',
-      timestamp: new Date(tx.time * 1000).toISOString(),
-      confirmations: tx.block_height ? 'confirmée' : 'non confirmée',
+      blockchain: blockchainConfig.symbol,
+      // ✅ PRIORITÉ AU TIMESTAMP DU BLOC
+      timestamp: blockTimestamp || new Date(tx.time * 1000).toISOString(),
+      confirmations: tx.block_height ? 'confirmee' : 'non confirmee',
       blockHeight: tx.block_height || null,
-      quantity: totalOutputBTC,
+      quantity,
       fees: feeBTC,
+      from: tx.inputs[0]?.prev_out?.addr || 'coinbase',
+      to: recipientAddress || allOutputs[0]?.address || null,
       inputs: tx.inputs.map(input => ({
         address: input.prev_out?.addr || 'coinbase',
         value: (input.prev_out?.value || 0) / 1e8,
       })),
-      outputs: tx.out.map(output => ({
-        address: output.addr,
-        value: output.value / 1e8,
-      })),
+      outputs: allOutputs,
+      totalOutputs: allOutputs.length,
+      relevantOutputs,
     };
   } catch (error) {
     if (error.response?.status === 404) {
-      throw new Error('Transaction Bitcoin non trouvée');
+      throw new Error('Transaction Bitcoin non trouvee');
     }
+    if (error.message.includes('pas recu de fonds')) throw error;
     throw new Error(`Erreur API Bitcoin: ${error.message}`);
   }
 }
 
-// ---------------------------------------------------------------------------
-// Ethereum - via Etherscan API
-// ---------------------------------------------------------------------------
-async function getEthereumTxDetails(txHash) {
-  try {
-    const { baseUrl, apiKey } = API_CONFIG.ethereum;
 
-    // Récupérer les détails de la transaction
+// ---------------------------------------------------------------------------
+// Handler generique Etherscan-like (ETH, BSC, MATIC, ARB, OP, AVAX, etc.)
+// ---------------------------------------------------------------------------
+async function getEtherscanLikeTxDetails(txHash, blockchainConfig, apiKey, recipientAddress = null) {
+  const baseUrl = blockchainConfig.api_url;
+  const symbol = blockchainConfig.symbol;
+
+  try {
     const txResponse = await axios.get(baseUrl, {
       params: {
         module: 'proxy',
         action: 'eth_getTransactionByHash',
         txhash: txHash,
-        apikey: apiKey,
+        apikey: apiKey || '',
       },
     });
 
     const tx = txResponse.data.result;
     if (!tx) {
-      throw new Error('Transaction Ethereum non trouvée');
+      throw new Error(`Transaction ${symbol} non trouvee`);
     }
 
-    // Récupérer le reçu pour les frais réels
+    if (recipientAddress) {
+      const normalizedRecipient = recipientAddress.toLowerCase();
+      const normalizedTo = (tx.to || '').toLowerCase();
+      if (normalizedRecipient !== normalizedTo) {
+        throw new Error('Cette adresse n\'est pas la destination de cette transaction');
+      }
+    }
+
     const receiptResponse = await axios.get(baseUrl, {
       params: {
         module: 'proxy',
         action: 'eth_getTransactionReceipt',
         txhash: txHash,
-        apikey: apiKey,
+        apikey: apiKey || '',
       },
     });
 
     const receipt = receiptResponse.data.result;
 
-    // Conversion des valeurs hex en décimal
     const valueWei = parseInt(tx.value, 16);
-    const valueETH = valueWei / 1e18;
+    const value = valueWei / 1e18;
     const gasUsed = receipt ? parseInt(receipt.gasUsed, 16) : 0;
     const gasPrice = parseInt(tx.gasPrice, 16);
-    const feesETH = (gasUsed * gasPrice) / 1e18;
+    const fees = (gasUsed * gasPrice) / 1e18;
 
-    // Récupérer le timestamp du bloc
     let timestamp = null;
     if (tx.blockNumber) {
       const blockResponse = await axios.get(baseUrl, {
@@ -95,7 +153,7 @@ async function getEthereumTxDetails(txHash) {
           action: 'eth_getBlockByNumber',
           tag: tx.blockNumber,
           boolean: 'false',
-          apikey: apiKey,
+          apikey: apiKey || '',
         },
       });
       const block = blockResponse.data.result;
@@ -106,95 +164,288 @@ async function getEthereumTxDetails(txHash) {
 
     return {
       hash: tx.hash,
-      blockchain: 'ETH',
+      blockchain: symbol,
       timestamp,
-      confirmations: receipt?.status === '0x1' ? 'confirmée' : 'échouée',
+      confirmations: receipt?.status === '0x1' ? 'confirmee' : 'echouee',
       blockHeight: tx.blockNumber ? parseInt(tx.blockNumber, 16) : null,
       from: tx.from,
       to: tx.to,
-      quantity: valueETH,
-      fees: feesETH,
+      quantity: value,
+      fees,
+      outputs: [{ address: tx.to, value }],
+      totalOutputs: 1,
+      relevantOutputs: 1,
     };
   } catch (error) {
-    if (error.message.includes('non trouvée')) throw error;
-    throw new Error(`Erreur API Ethereum: ${error.message}`);
+    if (error.message.includes('non trouvee')) throw error;
+    if (error.message.includes('pas la destination')) throw error;
+    throw new Error(`Erreur API ${symbol}: ${error.message}`);
   }
 }
 
 // ---------------------------------------------------------------------------
-// BSC (Binance Smart Chain) - via BscScan API (même format qu'Etherscan)
+// Routeur principal - dispatch sur api_type depuis la config DB
 // ---------------------------------------------------------------------------
-async function getBscTxDetails(txHash) {
+async function getTransactionDetails(txHash, blockchain, recipientAddress = null) {
+  const config = await blockchainManager.getBlockchainBySymbol(blockchain);
+  if (!config) {
+    throw new Error(`Blockchain "${blockchain}" non configuree`);
+  }
+  if (!config.is_active) {
+    throw new Error(`Blockchain "${blockchain}" est desactivee`);
+  }
+
+  const apiKey = await blockchainManager.getApiKey(blockchain);
+
+  switch (config.api_type) {
+    case 'bitcoin':
+      return getBitcoinTxDetails(txHash, config, recipientAddress);
+    case 'etherscan':
+      return getEtherscanLikeTxDetails(txHash, config, apiKey, recipientAddress);
+    case 'unsupported':
+      throw new Error(
+        `La recuperation automatique n'est pas disponible pour ${config.name}. ` +
+        'Utilisez la saisie manuelle.'
+      );
+    default:
+      throw new Error(`Type d'API "${config.api_type}" non supporte`);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Validation async via DB
+// ---------------------------------------------------------------------------
+async function isValidHash(hash, blockchain) {
+  const config = await blockchainManager.getBlockchainBySymbol(blockchain);
+  if (!config) return false;
+  return blockchainManager.validateHash(hash, config);
+}
+
+async function isValidAddress(address, blockchain) {
+  const config = await blockchainManager.getBlockchainBySymbol(blockchain);
+  if (!config) return false;
+  return blockchainManager.validateAddress(address, config);
+}
+
+async function getAssetSymbol(blockchain) {
+  const config = await blockchainManager.getBlockchainBySymbol(blockchain);
+  return config?.asset_symbol || null;
+}
+
+// ---------------------------------------------------------------------------
+// Recuperation du prix depuis plusieurs sources pour comparaison/debug
+// ---------------------------------------------------------------------------
+// Delegue a priceService.getHistoricalPriceAllSources qui interroge
+// Binance (1min), CryptoCompare (horaire) et CoinGecko (range) en parallele.
+async function getPriceFromMultipleSources(assetSymbol, timestamp) {
   try {
-    const { baseUrl, apiKey } = API_CONFIG.bsc;
+    return await priceService.getHistoricalPriceAllSources(assetSymbol, timestamp);
+  } catch {
+    return {
+      sources: { binance: null, cryptocompare: null, coingecko: null },
+      average: null,
+      recommended: null,
+      recommendedSource: null,
+      sourcesCount: 0,
+    };
+  }
+}
 
-    const txResponse = await axios.get(baseUrl, {
-      params: {
-        module: 'proxy',
-        action: 'eth_getTransactionByHash',
-        txhash: txHash,
-        apikey: apiKey,
-      },
-    });
-
-    const tx = txResponse.data.result;
-    if (!tx) {
-      throw new Error('Transaction BSC non trouvée');
+// ---------------------------------------------------------------------------
+// Validation complete et recuperation des details d'une transaction
+// ---------------------------------------------------------------------------
+async function validateAndFetchTransaction(txHash, blockchain, recipientAddress = null) {
+  try {
+    if (!(await isValidHash(txHash, blockchain))) {
+      return {
+        success: false,
+        error: 'FORMAT_INVALID',
+        message: 'Le format du hash de transaction est invalide',
+      };
     }
 
-    const receiptResponse = await axios.get(baseUrl, {
-      params: {
-        module: 'proxy',
-        action: 'eth_getTransactionReceipt',
-        txhash: txHash,
-        apikey: apiKey,
+    if (recipientAddress && !(await isValidAddress(recipientAddress, blockchain))) {
+      return {
+        success: false,
+        error: 'ADDRESS_INVALID',
+        message: "Le format de l'adresse est invalide pour " + blockchain,
+      };
+    }
+
+    let txDetails;
+    try {
+      txDetails = await getTransactionDetails(txHash, blockchain, recipientAddress);
+    } catch (err) {
+      if (err.message.includes('non trouvee')) {
+        return {
+          success: false,
+          error: 'TX_NOT_FOUND',
+          message: 'Transaction non trouvee sur la blockchain',
+        };
+      }
+      if (err.message.includes('pas recu de fonds') || err.message.includes('pas la destination')) {
+        return {
+          success: false,
+          error: 'ADDRESS_NOT_IN_TX',
+          message: err.message,
+        };
+      }
+      if (err.message.includes('recuperation automatique')) {
+        return {
+          success: false,
+          error: 'UNSUPPORTED',
+          message: err.message,
+        };
+      }
+      throw err;
+    }
+
+    if (!txDetails) {
+      return {
+        success: false,
+        error: 'TX_NOT_FOUND',
+        message: 'Transaction non trouvee sur la blockchain',
+      };
+    }
+
+    let timestamp;
+    if (txDetails.timestamp) {
+      const d = new Date(txDetails.timestamp);
+      timestamp = Math.floor(d.getTime() / 1000);
+    }
+
+    const priceSymbol = await getAssetSymbol(blockchain);
+    let priceAtTime = null;
+    let estimatedValue = null;
+    let priceSources = null;
+
+    if (txDetails.timestamp && priceSymbol) {
+      try {
+        priceSources = await getPriceFromMultipleSources(priceSymbol, txDetails.timestamp);
+        priceAtTime = priceSources.recommended || priceSources.average;
+        if (priceAtTime) {
+          estimatedValue = txDetails.quantity * priceAtTime;
+        }
+      } catch {
+        // Prix non disponible
+      }
+    }
+
+    const debug = {
+      quantityRaw: txDetails.quantity,
+      feesRaw: txDetails.fees,
+      priceSources: priceSources || {
+        sources: { binance: null, cryptocompare: null, coingecko: null },
+        average: null, recommended: null, recommendedSource: null, sourcesCount: 0,
       },
-    });
-
-    const receipt = receiptResponse.data.result;
-
-    const valueWei = parseInt(tx.value, 16);
-    const valueBNB = valueWei / 1e18;
-    const gasUsed = receipt ? parseInt(receipt.gasUsed, 16) : 0;
-    const gasPrice = parseInt(tx.gasPrice, 16);
-    const feesBNB = (gasUsed * gasPrice) / 1e18;
+      calculation: {
+        quantity: txDetails.quantity,
+        price: priceAtTime,
+        priceSource: priceSources?.recommendedSource || null,
+        subtotal: priceAtTime ? txDetails.quantity * priceAtTime : null,
+        fees: txDetails.fees,
+        feesInEur: priceAtTime ? txDetails.fees * priceAtTime : null,
+        total: priceAtTime
+          ? (txDetails.quantity * priceAtTime) + (txDetails.fees * priceAtTime)
+          : null,
+      },
+    };
 
     return {
-      hash: tx.hash,
-      blockchain: 'BSC',
-      timestamp: null, // TODO: récupérer le timestamp du bloc comme pour ETH
-      confirmations: receipt?.status === '0x1' ? 'confirmée' : 'échouée',
-      blockHeight: tx.blockNumber ? parseInt(tx.blockNumber, 16) : null,
-      from: tx.from,
-      to: tx.to,
-      quantity: valueBNB,
-      fees: feesBNB,
+      success: true,
+      data: {
+        hash: txHash,
+        blockchain,
+        recipientAddress: recipientAddress || null,
+        timestamp: timestamp || null,
+        date: txDetails.timestamp || new Date().toISOString(),
+        quantity: txDetails.quantity,
+        fees: txDetails.fees,
+        confirmations: txDetails.confirmations,
+        blockHeight: txDetails.blockHeight || null,
+        priceAtTime,
+        estimatedValue,
+        fromAddress: txDetails.from || (txDetails.inputs?.[0]?.address) || null,
+        toAddress: txDetails.to || (txDetails.outputs?.[0]?.address) || null,
+        assetSymbol: priceSymbol,
+        totalOutputs: txDetails.totalOutputs || 1,
+        relevantOutputs: txDetails.relevantOutputs || 1,
+        debug,
+      },
     };
   } catch (error) {
-    if (error.message.includes('non trouvée')) throw error;
-    throw new Error(`Erreur API BSC: ${error.message}`);
+    console.error('Error validating transaction:', error);
+    return {
+      success: false,
+      error: 'API_ERROR',
+      message: error.message || 'Erreur lors de la recuperation des donnees blockchain',
+    };
   }
 }
 
 // ---------------------------------------------------------------------------
-// Routeur principal - redirige vers la bonne blockchain
+// Recupere toutes les adresses de destination d'une transaction
 // ---------------------------------------------------------------------------
-async function getTransactionDetails(txHash, blockchain) {
-  switch (blockchain.toUpperCase()) {
-    case 'BTC':
-      return getBitcoinTxDetails(txHash);
-    case 'ETH':
-      return getEthereumTxDetails(txHash);
-    case 'BSC':
-      return getBscTxDetails(txHash);
-    default:
-      throw new Error(`Blockchain "${blockchain}" non supportée. Blockchains supportées: BTC, ETH, BSC`);
+async function getTransactionOutputAddresses(txHash, blockchain) {
+  try {
+    const config = await blockchainManager.getBlockchainBySymbol(blockchain);
+    if (!config) {
+      return { success: false, error: `Blockchain ${blockchain} non configuree` };
+    }
+
+    const apiKey = await blockchainManager.getApiKey(blockchain);
+
+    if (config.api_type === 'bitcoin') {
+      const baseUrl = config.api_url || 'https://blockchain.info';
+      const response = await axios.get(`${baseUrl}/rawtx/${txHash}`);
+      const addresses = response.data.out
+        .filter(output => output.addr)
+        .map(output => ({
+          address: output.addr,
+          amount: output.value / 1e8,
+          spent: output.spent,
+        }));
+      return { success: true, addresses };
+    }
+
+    if (config.api_type === 'etherscan') {
+      const txResponse = await axios.get(config.api_url, {
+        params: {
+          module: 'proxy',
+          action: 'eth_getTransactionByHash',
+          txhash: txHash,
+          apikey: apiKey || '',
+        },
+      });
+      const tx = txResponse.data.result;
+      if (!tx) {
+        return { success: false, error: 'Transaction non trouvee' };
+      }
+      return {
+        success: true,
+        addresses: [{
+          address: tx.to,
+          amount: parseInt(tx.value, 16) / 1e18,
+        }],
+      };
+    }
+
+    return {
+      success: false,
+      error: `Recuperation des outputs non supportee pour ${config.name}`,
+    };
+  } catch (error) {
+    console.error('Error getting output addresses:', error);
+    return { success: false, error: error.message };
   }
 }
 
 module.exports = {
-  getBitcoinTxDetails,
-  getEthereumTxDetails,
-  getBscTxDetails,
   getTransactionDetails,
+  validateAndFetchTransaction,
+  getTransactionOutputAddresses,
+  getPriceFromMultipleSources,
+  isValidHash,
+  isValidAddress,
+  getAssetSymbol,
 };

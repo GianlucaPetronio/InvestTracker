@@ -2,47 +2,39 @@
 // Fonctions de validation (hash, formats, montants)
 // =============================================================================
 
-/**
- * Valide un hash de transaction Bitcoin (64 caractères hexadécimaux)
- */
+const blockchainManager = require('../services/blockchainManager');
+
+// ---------------------------------------------------------------------------
+// Fonctions utilitaires sync (legacy, pour validation rapide sans DB)
+// ---------------------------------------------------------------------------
+
 function isValidBitcoinHash(hash) {
   return /^[a-fA-F0-9]{64}$/.test(hash);
 }
 
-/**
- * Valide un hash de transaction Ethereum/BSC (0x + 64 caractères hexadécimaux)
- */
 function isValidEthereumHash(hash) {
   return /^0x[a-fA-F0-9]{64}$/.test(hash);
 }
 
-/**
- * Valide un hash de transaction selon la blockchain spécifiée
- */
-function isValidTransactionHash(hash, blockchain) {
-  switch (blockchain.toUpperCase()) {
-    case 'BTC':
-      return isValidBitcoinHash(hash);
-    case 'ETH':
-    case 'BSC':
-      return isValidEthereumHash(hash);
-    default:
-      return false;
-  }
+// ---------------------------------------------------------------------------
+// Fonctions async basees sur la configuration DB
+// ---------------------------------------------------------------------------
+
+async function isValidTransactionHash(hash, blockchain) {
+  const config = await blockchainManager.getBlockchainBySymbol(blockchain);
+  if (!config) return false;
+  return blockchainManager.validateHash(hash, config);
 }
 
-/**
- * Valide les blockchains supportées
- */
-const SUPPORTED_BLOCKCHAINS = ['BTC', 'ETH', 'BSC'];
-
-function isSupportedBlockchain(blockchain) {
-  return SUPPORTED_BLOCKCHAINS.includes(blockchain.toUpperCase());
+async function isSupportedBlockchain(blockchain) {
+  const config = await blockchainManager.getBlockchainBySymbol(blockchain);
+  return config !== null && config.is_active;
 }
 
-/**
- * Valide les données d'une transaction manuelle
- */
+// ---------------------------------------------------------------------------
+// Validation de transaction manuelle
+// ---------------------------------------------------------------------------
+
 function validateManualTransaction(data) {
   const errors = [];
 
@@ -50,16 +42,16 @@ function validateManualTransaction(data) {
     errors.push('Le symbole de l\'actif est requis');
   }
   if (!data.asset_type || !['crypto', 'traditional'].includes(data.asset_type)) {
-    errors.push('Le type d\'actif doit être "crypto" ou "traditional"');
+    errors.push('Le type d\'actif doit etre "crypto" ou "traditional"');
   }
   if (!data.transaction_date) {
     errors.push('La date de transaction est requise');
   }
   if (!data.price_at_purchase || data.price_at_purchase <= 0) {
-    errors.push('Le prix d\'achat doit être positif');
+    errors.push('Le prix d\'achat doit etre positif');
   }
   if (!data.quantity_purchased || data.quantity_purchased <= 0) {
-    errors.push('La quantité achetée doit être positive');
+    errors.push('La quantite achetee doit etre positive');
   }
 
   return { valid: errors.length === 0, errors };
@@ -71,5 +63,4 @@ module.exports = {
   isValidTransactionHash,
   isSupportedBlockchain,
   validateManualTransaction,
-  SUPPORTED_BLOCKCHAINS,
 };

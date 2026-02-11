@@ -56,3 +56,77 @@ CREATE INDEX idx_transactions_date ON transactions(transaction_date);
 CREATE INDEX idx_transactions_hash ON transactions(transaction_hash);
 CREATE INDEX idx_price_cache_symbol ON price_cache(asset_symbol);
 CREATE INDEX idx_price_cache_timestamp ON price_cache(timestamp);
+
+-- =============================================================================
+-- Table des blockchains supportées
+-- =============================================================================
+-- Permet la gestion dynamique des blockchains supportées par l'application.
+-- api_type détermine le handler utilisé :
+--   'bitcoin'     -> getBitcoinTxDetails (Blockchain.info API)
+--   'etherscan'   -> getEtherscanLikeTxDetails (générique pour toutes les EVM chains)
+--   'unsupported' -> pas de récupération automatique (erreur explicite)
+
+CREATE TABLE blockchains (
+    id SERIAL PRIMARY KEY,
+    symbol VARCHAR(10) NOT NULL UNIQUE,
+    name VARCHAR(100) NOT NULL,
+    icon VARCHAR(10) NOT NULL DEFAULT '●',
+    hash_pattern VARCHAR(200) NOT NULL,
+    address_pattern VARCHAR(200),
+    needs_recipient_address BOOLEAN DEFAULT false,
+    asset_symbol VARCHAR(10) NOT NULL,
+    api_type VARCHAR(30) NOT NULL,
+    api_url VARCHAR(500),
+    api_key_env_var VARCHAR(100),
+    is_active BOOLEAN DEFAULT true,
+    is_custom BOOLEAN DEFAULT false,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_blockchains_symbol ON blockchains(symbol);
+CREATE INDEX idx_blockchains_active ON blockchains(is_active);
+
+-- Blockchains par défaut
+INSERT INTO blockchains (symbol, name, icon, hash_pattern, address_pattern, needs_recipient_address, asset_symbol, api_type, api_url, api_key_env_var, is_active, is_custom)
+VALUES
+  ('BTC',   'Bitcoin',          '₿', '^[a-fA-F0-9]{64}$',
+    '^[13][a-km-zA-HJ-NP-Z1-9]{25,34}$|^bc1[a-z0-9]{39,59}$',
+    true,  'BTC',  'bitcoin',     'https://blockchain.info',                      NULL,                  true, false),
+  ('ETH',   'Ethereum',         '⟠', '^0x[a-fA-F0-9]{64}$',
+    '^0x[a-fA-F0-9]{40}$',
+    false, 'ETH',  'etherscan',   'https://api.etherscan.io/api',                 'ETHERSCAN_API_KEY',   true, false),
+  ('BSC',   'BNB Smart Chain',  '◇', '^0x[a-fA-F0-9]{64}$',
+    '^0x[a-fA-F0-9]{40}$',
+    false, 'BNB',  'etherscan',   'https://api.bscscan.com/api',                  'BSCSCAN_API_KEY',     true, false),
+  ('MATIC', 'Polygon',          '⬡', '^0x[a-fA-F0-9]{64}$',
+    '^0x[a-fA-F0-9]{40}$',
+    false, 'MATIC','etherscan',   'https://api.polygonscan.com/api',               'POLYGONSCAN_API_KEY', true, false),
+  ('SOL',   'Solana',           '◎', '^[1-9A-HJ-NP-Za-km-z]{87,88}$',
+    '^[1-9A-HJ-NP-Za-km-z]{32,44}$',
+    true,  'SOL',  'unsupported', NULL,                                            NULL,                  true, false),
+  ('AVAX',  'Avalanche',        '▲', '^0x[a-fA-F0-9]{64}$',
+    '^0x[a-fA-F0-9]{40}$',
+    false, 'AVAX', 'etherscan',   'https://api.snowtrace.io/api',                 'SNOWTRACE_API_KEY',   true, false),
+  ('ARB',   'Arbitrum',         '●', '^0x[a-fA-F0-9]{64}$',
+    '^0x[a-fA-F0-9]{40}$',
+    false, 'ETH',  'etherscan',   'https://api.arbiscan.io/api',                  'ARBISCAN_API_KEY',    true, false),
+  ('OP',    'Optimism',         '○', '^0x[a-fA-F0-9]{64}$',
+    '^0x[a-fA-F0-9]{40}$',
+    false, 'ETH',  'etherscan',   'https://api-optimistic.etherscan.io/api',      'OPTIMISM_API_KEY',    true, false)
+ON CONFLICT (symbol) DO NOTHING;
+
+-- =============================================================================
+-- Table des clés API (override runtime, prioritaire sur les variables d'env)
+-- =============================================================================
+CREATE TABLE blockchain_api_keys (
+    id SERIAL PRIMARY KEY,
+    blockchain_symbol VARCHAR(10) NOT NULL REFERENCES blockchains(symbol) ON DELETE CASCADE,
+    api_key VARCHAR(500) NOT NULL,
+    label VARCHAR(100),
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(blockchain_symbol)
+);
+
+CREATE INDEX idx_blockchain_api_keys_symbol ON blockchain_api_keys(blockchain_symbol);

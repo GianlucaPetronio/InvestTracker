@@ -64,9 +64,45 @@ export const getAssetsHistory = (period = 'ALL') =>
   api.get('/portfolio/assets-history', { params: { period } });
 
 // ---------------------------------------------------------------------------
-// Blockchain
+// Blockchain - Vérification de transactions
 // ---------------------------------------------------------------------------
 export const verifyBlockchainTx = (txHash, blockchain) =>
   api.post('/blockchain/verify', { txHash, blockchain });
+
+export const validateBlockchainTx = (txHash, blockchain, recipientAddress = null) =>
+  api.post('/blockchain/validate', { txHash, blockchain, recipientAddress });
+
+export const detectBlockchain = (hash) =>
+  api.get(`/blockchain/detect/${encodeURIComponent(hash)}`);
+
+export const getTransactionOutputs = (blockchain, hash) =>
+  api.get(`/blockchain/outputs/${blockchain}/${encodeURIComponent(hash)}`);
+
+// ---------------------------------------------------------------------------
+// Blockchains - Gestion des blockchains supportées
+// ---------------------------------------------------------------------------
+export const getBlockchains = (includeInactive = false) =>
+  api.get('/blockchains', { params: { includeInactive } });
+
+export const getBlockchain = (symbol) =>
+  api.get(`/blockchains/${symbol}`);
+
+export const createBlockchain = (data) =>
+  api.post('/blockchains', data);
+
+export const updateBlockchain = (symbol, data) =>
+  api.put(`/blockchains/${symbol}`, data);
+
+export const deleteBlockchain = (symbol) =>
+  api.delete(`/blockchains/${symbol}`);
+
+export const toggleBlockchain = (symbol) =>
+  api.post(`/blockchains/${symbol}/toggle`);
+
+export const saveBlockchainApiKey = (symbol, apiKey, label = null) =>
+  api.post(`/blockchains/${symbol}/api-key`, { api_key: apiKey, label });
+
+export const removeBlockchainApiKey = (symbol) =>
+  api.delete(`/blockchains/${symbol}/api-key`);
 
 export default api;

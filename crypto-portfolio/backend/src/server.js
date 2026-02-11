@@ -10,6 +10,7 @@ const transactionsRouter = require('./routes/transactions');
 const assetsRouter = require('./routes/assets');
 const portfolioRouter = require('./routes/portfolio');
 const blockchainRouter = require('./routes/blockchain');
+const blockchainsRouter = require('./routes/blockchains');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -38,6 +39,7 @@ app.use('/api/transactions', transactionsRouter);
 app.use('/api/assets', assetsRouter);
 app.use('/api/portfolio', portfolioRouter);
 app.use('/api/blockchain', blockchainRouter);
+app.use('/api/blockchains', blockchainsRouter);
 
 // Route de santé
 app.get('/api/health', (_req, res) => {

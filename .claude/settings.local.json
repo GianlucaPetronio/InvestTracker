@@ -6,7 +6,11 @@
       "Bash(timeout:*)",
       "Bash(curl:*)",
       "Bash(where:*)",
-      "Bash(python -m json.tool:*)"
+      "Bash(python -m json.tool:*)",
+      "WebSearch",
+      "WebFetch(domain:docs.coingecko.com)",
+      "WebFetch(domain:support.coingecko.com)",
+      "WebFetch(domain:developers.coindesk.com)"
     ]
   }
 }

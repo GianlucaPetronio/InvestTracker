@@ -8,7 +8,6 @@ const API_CONFIG = {
   // Blockchain explorers
   bitcoin: {
     baseUrl: 'https://blockchain.info',
-    // Pas de clé API requise pour l'API publique Blockchain.com
   },
 
   ethereum: {
@@ -21,14 +20,50 @@ const API_CONFIG = {
     apiKey: process.env.BSCSCAN_API_KEY || '',
   },
 
-  // Prix et données de marché
+  // ---------------------------------------------------------------------------
+  // Sources de prix (par ordre de precision)
+  // ---------------------------------------------------------------------------
+
+  // Binance - bougies 1 minute, le plus precis, pas de cle API requise
+  binance: {
+    baseUrl: 'https://api.binance.com/api/v3',
+  },
+
+  // CryptoCompare - precision horaire, large couverture, EUR direct
+  cryptocompare: {
+    baseUrl: 'https://min-api.cryptocompare.com/data',
+    apiKey: process.env.CRYPTOCOMPARE_API_KEY || '',
+  },
+
+  // CoinGecko - fallback, precision horaire/journaliere
   coingecko: {
     baseUrl: 'https://api.coingecko.com/api/v3',
     apiKey: process.env.COINGECKO_API_KEY || '',
   },
 };
 
-// Mapping des symboles vers les IDs CoinGecko
+// ---------------------------------------------------------------------------
+// Mappings de symboles par API
+// ---------------------------------------------------------------------------
+
+// Binance : paires EUR directes (les plus liquides)
+const BINANCE_EUR_SYMBOLS = {
+  BTC: 'BTCEUR',
+  ETH: 'ETHEUR',
+  BNB: 'BNBEUR',
+  SOL: 'SOLEUR',
+  AVAX: 'AVAXEUR',
+  ADA: 'ADAEUR',
+  DOT: 'DOTEUR',
+  MATIC: 'MATICEUR',
+  LINK: 'LINKEUR',
+  UNI: 'UNIEUR',
+  XRP: 'XRPEUR',
+  OP: 'OPEUR',
+  ARB: 'ARBEUR',
+};
+
+// CoinGecko : mapping symbole -> id CoinGecko
 const COINGECKO_IDS = {
   BTC: 'bitcoin',
   ETH: 'ethereum',
@@ -40,6 +75,9 @@ const COINGECKO_IDS = {
   MATIC: 'matic-network',
   LINK: 'chainlink',
   UNI: 'uniswap',
+  OP: 'optimism',
+  ARB: 'arbitrum',
+  XRP: 'ripple',
 };
 
-module.exports = { API_CONFIG, COINGECKO_IDS };
+module.exports = { API_CONFIG, COINGECKO_IDS, BINANCE_EUR_SYMBOLS };
