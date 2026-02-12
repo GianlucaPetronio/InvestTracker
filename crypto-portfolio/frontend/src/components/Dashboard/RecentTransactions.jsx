@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { getRecentTransactions } from '../../services/api';
 import { formatCurrency, formatQuantity } from '../../utils/calculations';
+import EditTransactionModal from '../EditTransactionModal';
 
 function timeAgo(dateStr) {
   const date = new Date(dateStr);
@@ -36,20 +37,27 @@ const SOURCE_BADGE = {
 function RecentTransactions() {
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [editingTx, setEditingTx] = useState(null);
+
+  async function fetchData() {
+    try {
+      const response = await getRecentTransactions(5);
+      setTransactions(response.data);
+    } catch {
+      setTransactions([]);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   useEffect(() => {
-    async function fetchData() {
-      try {
-        const response = await getRecentTransactions(5);
-        setTransactions(response.data);
-      } catch {
-        setTransactions([]);
-      } finally {
-        setLoading(false);
-      }
-    }
     fetchData();
   }, []);
+
+  function handleEditSaved() {
+    setEditingTx(null);
+    fetchData();
+  }
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 transition-colors">
@@ -79,7 +87,7 @@ function RecentTransactions() {
             return (
               <div
                 key={tx.id}
-                className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+                className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors group"
               >
                 {/* Icone actif */}
                 <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold ${
@@ -120,10 +128,30 @@ function RecentTransactions() {
                     {timeAgo(tx.transaction_date)}
                   </p>
                 </div>
+
+                {/* Bouton modifier */}
+                <button
+                  onClick={() => setEditingTx(tx)}
+                  className="opacity-0 group-hover:opacity-100 text-indigo-500 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 transition-all p-1.5 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-900/20"
+                  title="Modifier"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
+                  </svg>
+                </button>
               </div>
             );
           })}
         </div>
+      )}
+
+      {/* Modal d'edition */}
+      {editingTx && (
+        <EditTransactionModal
+          transaction={editingTx}
+          onClose={() => setEditingTx(null)}
+          onSaved={handleEditSaved}
+        />
       )}
     </div>
   );

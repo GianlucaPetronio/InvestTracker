@@ -10,7 +10,9 @@
       "WebSearch",
       "WebFetch(domain:docs.coingecko.com)",
       "WebFetch(domain:support.coingecko.com)",
-      "WebFetch(domain:developers.coindesk.com)"
+      "WebFetch(domain:developers.coindesk.com)",
+      "Bash(test:*)",
+      "Bash(pg_isready:*)"
     ]
   }
 }

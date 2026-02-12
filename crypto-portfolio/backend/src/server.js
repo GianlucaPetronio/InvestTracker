@@ -6,6 +6,7 @@ const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
 
+const { initDatabase } = require('./config/database');
 const transactionsRouter = require('./routes/transactions');
 const assetsRouter = require('./routes/assets');
 const portfolioRouter = require('./routes/portfolio');
@@ -41,6 +42,8 @@ app.use('/api/portfolio', portfolioRouter);
 app.use('/api/blockchain', blockchainRouter);
 app.use('/api/blockchains', blockchainsRouter);
 
+console.log('Routes enregistrees: /api/transactions, /api/assets, /api/portfolio, /api/blockchain, /api/blockchains');
+
 // Route de santé
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
@@ -59,7 +62,8 @@ app.use((err, _req, res, _next) => {
 // ---------------------------------------------------------------------------
 // Démarrage du serveur
 // ---------------------------------------------------------------------------
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
   console.log(`Serveur démarré sur le port ${PORT}`);
   console.log(`Environnement: ${process.env.NODE_ENV || 'development'}`);
+  await initDatabase();
 });

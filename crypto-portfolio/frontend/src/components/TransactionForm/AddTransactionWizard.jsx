@@ -104,12 +104,9 @@ export default function AddTransactionWizard() {
     try {
       const isBlockchainSource = transactionType === 'blockchain';
 
-      // Pour les transactions blockchain :
-      // - amount_invested = montant reellement paye (source de verite)
-      // - transaction_fees = 0 (les frais sont inclus dans le montant paye)
-      // Pour les transactions manuelles :
-      // - amount_invested = montant saisi par l'utilisateur
-      // - transaction_fees = frais saisis separement
+      // amount_invested = montant hors frais
+      // transaction_fees = frais de transaction (blockchain ou manuels)
+      // => cout total = amount_invested + transaction_fees
       const payload = {
         asset_symbol: formData.assetSymbol,
         asset_name: formData.assetName || formData.assetSymbol,
@@ -117,22 +114,43 @@ export default function AddTransactionWizard() {
         transaction_hash: formData.txHash || null,
         blockchain: formData.blockchain || null,
         transaction_date: formData.date,
-        amount_invested: isBlockchainSource
-          ? (parseFloat(formData.amountPaid) || parseFloat(formData.amount) || 0)
-          : (parseFloat(formData.amount) || (parseFloat(formData.price) * parseFloat(formData.quantity))),
+        amount_invested: parseFloat(formData.amount) || (parseFloat(formData.price) * parseFloat(formData.quantity)),
         price_at_purchase: parseFloat(formData.price) || 0,
         quantity_purchased: parseFloat(formData.quantity),
-        transaction_fees: isBlockchainSource ? 0 : parseFloat(formData.fees || 0),
+        transaction_fees: parseFloat(formData.fees || 0),
         source: isBlockchainSource ? 'blockchain' : 'manual',
       };
 
-      await createTransaction(payload);
+      console.log('=== DEBUG TRANSACTION ===');
+      console.log('1. Payload:', JSON.stringify(payload, null, 2));
+      console.log('2. FormData:', JSON.stringify(formData, null, 2));
+      console.log('3. Type:', transactionType);
+
+      const response = await createTransaction(payload);
+
+      console.log('4. Reponse API:', response.data);
 
       navigate('/', {
-        state: { message: 'Transaction ajoutee avec succes !' },
+        state: {
+          message: `Transaction ajoutee avec succes ! ${payload.quantity_purchased} ${payload.asset_symbol} enregistre.`,
+        },
       });
     } catch (err) {
-      setError(err.response?.data?.error || 'Erreur lors de l\'enregistrement de la transaction');
+      console.error('=== ERREUR TRANSACTION ===');
+      console.error('Status:', err.response?.status);
+      console.error('Data:', err.response?.data);
+      console.error('Message:', err.message);
+
+      const errorDetail = err.response?.data?.error
+        || err.response?.data?.details
+        || err.message;
+      const errorCode = err.response?.data?.code;
+
+      setError(
+        errorCode
+          ? `${errorDetail} (code: ${errorCode})`
+          : errorDetail
+      );
     } finally {
       setLoading(false);
     }

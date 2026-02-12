@@ -58,6 +58,9 @@ router.get('/:id', async (req, res) => {
 // POST /api/transactions - Créer une transaction (manuelle ou blockchain)
 // ---------------------------------------------------------------------------
 router.post('/', async (req, res) => {
+  console.log('=== POST /api/transactions ===');
+  console.log('Body recu:', JSON.stringify(req.body, null, 2));
+
   try {
     const {
       asset_symbol, asset_name, asset_type,
@@ -66,13 +69,50 @@ router.post('/', async (req, res) => {
       quantity_purchased, transaction_fees, source,
     } = req.body;
 
-    // Validation pour les transactions manuelles
+    // Validation des champs requis (toutes sources)
+    if (!asset_symbol || !transaction_date || !price_at_purchase || !quantity_purchased) {
+      console.error('Validation echouee - champs manquants:', {
+        asset_symbol: !asset_symbol,
+        transaction_date: !transaction_date,
+        price_at_purchase: !price_at_purchase,
+        quantity_purchased: !quantity_purchased,
+      });
+      return res.status(400).json({
+        error: 'Champs requis manquants',
+        missing: {
+          asset_symbol: !asset_symbol,
+          transaction_date: !transaction_date,
+          price_at_purchase: !price_at_purchase,
+          quantity_purchased: !quantity_purchased,
+        }
+      });
+    }
+
+    // Validation supplémentaire pour les transactions manuelles
     if (source === 'manual') {
       const validation = validateManualTransaction(req.body);
       if (!validation.valid) {
-        return res.status(400).json({ errors: validation.errors });
+        console.error('Validation manuelle echouee:', validation.errors);
+        return res.status(400).json({ error: validation.errors.join(', ') });
       }
     }
+
+    // Vérifier si le hash existe déjà (éviter les doublons)
+    if (transaction_hash) {
+      console.log('Verification doublon pour hash:', transaction_hash);
+      const existing = await query(
+        'SELECT id FROM transactions WHERE transaction_hash = $1',
+        [transaction_hash]
+      );
+      if (existing.rows.length > 0) {
+        console.log('Doublon detecte - transaction existante id:', existing.rows[0].id);
+        return res.status(409).json({
+          error: 'Cette transaction existe déjà dans votre portfolio'
+        });
+      }
+    }
+
+    console.log('Insertion dans la DB...');
 
     const result = await query(
       `INSERT INTO transactions
@@ -82,19 +122,31 @@ router.post('/', async (req, res) => {
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
        RETURNING *`,
       [
-        asset_symbol.toUpperCase(), asset_name, asset_type,
+        asset_symbol.toUpperCase(), asset_name || asset_symbol.toUpperCase(), asset_type || 'crypto',
         transaction_hash || null, blockchain || null,
-        transaction_date, amount_invested, price_at_purchase,
-        quantity_purchased, transaction_fees || 0, source,
+        transaction_date, amount_invested || (price_at_purchase * quantity_purchased),
+        price_at_purchase, quantity_purchased, transaction_fees || 0, source || 'manual',
       ]
     );
 
-    res.status(201).json(result.rows[0]);
+    console.log('[OK] Transaction creee:', result.rows[0].id, '-', result.rows[0].asset_symbol);
+
+    res.status(201).json({
+      success: true,
+      transaction: result.rows[0],
+      message: 'Transaction créée avec succès'
+    });
   } catch (error) {
+    console.error('[ERREUR] Creation transaction:', error.message);
+    console.error('Stack:', error.stack);
     if (error.code === '23505') {
       return res.status(409).json({ error: 'Cette transaction blockchain existe déjà' });
     }
-    res.status(500).json({ error: error.message });
+    res.status(500).json({
+      error: 'Erreur lors de la création de la transaction',
+      details: error.message,
+      code: error.code || null
+    });
   }
 });
 

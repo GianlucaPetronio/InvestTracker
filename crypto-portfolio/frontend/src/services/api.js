@@ -12,6 +12,34 @@ const api = axios.create({
   headers: { 'Content-Type': 'application/json' },
 });
 
+// Intercepteurs de debug (requetes et reponses)
+api.interceptors.request.use(
+  config => {
+    console.log(`[API] ${config.method.toUpperCase()} ${config.baseURL}${config.url}`, config.data || '');
+    return config;
+  },
+  error => {
+    console.error('[API] Request error:', error);
+    return Promise.reject(error);
+  }
+);
+
+api.interceptors.response.use(
+  response => {
+    console.log(`[API] ${response.status} ${response.config.url}`, response.data);
+    return response;
+  },
+  error => {
+    console.error('[API] Error:', {
+      url: error.config?.url,
+      status: error.response?.status,
+      data: error.response?.data,
+      message: error.message,
+    });
+    return Promise.reject(error);
+  }
+);
+
 // ---------------------------------------------------------------------------
 // Transactions
 // ---------------------------------------------------------------------------

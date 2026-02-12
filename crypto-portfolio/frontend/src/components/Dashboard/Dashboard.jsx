@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useEffect, useCallback } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { getPortfolioStats, getPortfolioAssets } from '../../services/api';
 import StatsCards from './StatsCards';
 import PortfolioChart from './PortfolioChart';
@@ -9,28 +9,45 @@ import AllocationPieChart from './AllocationPieChart';
 import RecentTransactions from './RecentTransactions';
 
 function Dashboard() {
+  const location = useLocation();
   const [stats, setStats] = useState(null);
   const [assets, setAssets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [successMessage, setSuccessMessage] = useState(null);
+
+  const fetchData = useCallback(async () => {
+    try {
+      setLoading(true);
+      const [statsRes, assetsRes] = await Promise.all([
+        getPortfolioStats(),
+        getPortfolioAssets(),
+      ]);
+      setStats(statsRes.data);
+      setAssets(assetsRes.data);
+      setError(null);
+    } catch (err) {
+      setError(err.response?.data?.error || 'Erreur lors du chargement du dashboard');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    async function fetchData() {
-      try {
-        const [statsRes, assetsRes] = await Promise.all([
-          getPortfolioStats(),
-          getPortfolioAssets(),
-        ]);
-        setStats(statsRes.data);
-        setAssets(assetsRes.data);
-      } catch (err) {
-        setError(err.response?.data?.error || 'Erreur lors du chargement du dashboard');
-      } finally {
-        setLoading(false);
-      }
-    }
     fetchData();
-  }, []);
+  }, [fetchData]);
+
+  // Afficher le message de succès après ajout d'une transaction
+  useEffect(() => {
+    if (location.state?.message) {
+      setSuccessMessage(location.state.message);
+      // Effacer le message après 5 secondes
+      const timer = setTimeout(() => setSuccessMessage(null), 5000);
+      // Nettoyer le state pour éviter de réafficher au refresh
+      window.history.replaceState({}, document.title);
+      return () => clearTimeout(timer);
+    }
+  }, [location.state]);
 
   if (loading) {
     return (
@@ -85,6 +102,23 @@ function Dashboard() {
 
   return (
     <div className="space-y-6">
+      {/* Message de succès */}
+      {successMessage && (
+        <div className="bg-green-50 dark:bg-green-900/20 border-2 border-green-500
+                      dark:border-green-400 text-green-800 dark:text-green-200
+                      px-6 py-4 rounded-lg flex items-center gap-3 animate-fade-in">
+          <span className="text-2xl">&#x2705;</span>
+          <p className="flex-1 font-semibold">{successMessage}</p>
+          <button
+            onClick={() => setSuccessMessage(null)}
+            className="text-green-600 dark:text-green-400 hover:text-green-800
+                     dark:hover:text-green-200 text-xl"
+          >
+            &times;
+          </button>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Dashboard</h1>
