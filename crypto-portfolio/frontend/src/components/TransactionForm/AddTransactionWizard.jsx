@@ -23,6 +23,7 @@ export default function AddTransactionWizard() {
     quantity: '',
     price: '',
     amount: '',
+    amountPaid: '',
     fees: 0,
   });
   const [txDetails, setTxDetails] = useState(null);
@@ -74,6 +75,7 @@ export default function AddTransactionWizard() {
           quantity: d.quantity,
           price: d.priceAtTime,
           amount: d.estimatedValue,
+          amountPaid: (d.estimatedValue || 0) + feesInEur,
           fees: feesInEur,
           feesCrypto: d.fees,
         }));
@@ -100,6 +102,14 @@ export default function AddTransactionWizard() {
     setError(null);
 
     try {
+      const isBlockchainSource = transactionType === 'blockchain';
+
+      // Pour les transactions blockchain :
+      // - amount_invested = montant reellement paye (source de verite)
+      // - transaction_fees = 0 (les frais sont inclus dans le montant paye)
+      // Pour les transactions manuelles :
+      // - amount_invested = montant saisi par l'utilisateur
+      // - transaction_fees = frais saisis separement
       const payload = {
         asset_symbol: formData.assetSymbol,
         asset_name: formData.assetName || formData.assetSymbol,
@@ -107,11 +117,13 @@ export default function AddTransactionWizard() {
         transaction_hash: formData.txHash || null,
         blockchain: formData.blockchain || null,
         transaction_date: formData.date,
-        amount_invested: parseFloat(formData.amount) || (parseFloat(formData.price) * parseFloat(formData.quantity)),
+        amount_invested: isBlockchainSource
+          ? (parseFloat(formData.amountPaid) || parseFloat(formData.amount) || 0)
+          : (parseFloat(formData.amount) || (parseFloat(formData.price) * parseFloat(formData.quantity))),
         price_at_purchase: parseFloat(formData.price) || 0,
         quantity_purchased: parseFloat(formData.quantity),
-        transaction_fees: parseFloat(formData.fees || 0),
-        source: transactionType === 'blockchain' ? 'blockchain' : 'manual',
+        transaction_fees: isBlockchainSource ? 0 : parseFloat(formData.fees || 0),
+        source: isBlockchainSource ? 'blockchain' : 'manual',
       };
 
       await createTransaction(payload);

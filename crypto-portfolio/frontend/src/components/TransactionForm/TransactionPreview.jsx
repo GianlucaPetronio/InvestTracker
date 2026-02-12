@@ -40,57 +40,47 @@ function formatDebugNumber(num) {
 
 export default function TransactionPreview({ data, txDetails, onConfirm, onEdit, onDataChange, loading }) {
   const [showDebug, setShowDebug] = useState(false);
-  const [ledgerAmount, setLedgerAmount] = useState('');
   const [showHelp, setShowHelp] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [editedPrice, setEditedPrice] = useState(String(data.price || ''));
-  const [editedAmount, setEditedAmount] = useState(String(data.amount || ''));
+  // Montant reellement paye par l'utilisateur (source de verite comptable)
+  const [amountPaid, setAmountPaid] = useState(String(data.amountPaid || data.amount || ''));
 
-  const totalCost = parseFloat(data.amount || 0) + parseFloat(data.fees || 0);
-  const pricePerUnit = parseFloat(data.quantity) > 0
-    ? totalCost / parseFloat(data.quantity)
-    : 0;
+  const isBlockchain = !!data.txHash;
+  // Valeur estimee on-chain (informative) = quantite x prix spot
+  const estimatedOnchainValue = parseFloat(data.quantity || 0) * parseFloat(data.price || 0);
+  const feesEur = parseFloat(data.fees || 0);
+  const amountPaidNum = parseFloat(amountPaid || 0);
+  // Ecart entre montant paye et valeur on-chain estimee
+  const spread = isBlockchain && estimatedOnchainValue > 0
+    ? amountPaidNum - (estimatedOnchainValue + feesEur)
+    : null;
 
   const handlePriceChange = (value) => {
     setEditedPrice(value);
-    const p = parseFloat(value);
-    const q = parseFloat(data.quantity);
-    if (p > 0 && q > 0) {
-      setEditedAmount(String(p * q));
-    }
-  };
-
-  const handleAmountChange = (value) => {
-    setEditedAmount(value);
-    const a = parseFloat(value);
-    const q = parseFloat(data.quantity);
-    if (a > 0 && q > 0) {
-      setEditedPrice(String(a / q));
-    }
   };
 
   const handleSaveEdit = () => {
     const price = parseFloat(editedPrice);
-    const amount = parseFloat(editedAmount);
-    if (price > 0 && amount > 0 && onDataChange) {
-      onDataChange({ price, amount });
+    if (price > 0 && onDataChange) {
+      onDataChange({ price, amount: price * parseFloat(data.quantity) });
     }
     setEditMode(false);
   };
 
   const handleCancelEdit = () => {
     setEditedPrice(String(data.price || ''));
-    setEditedAmount(String(data.amount || ''));
     setEditMode(false);
   };
 
+  const handleAmountPaidChange = (value) => {
+    setAmountPaid(value);
+    if (onDataChange) {
+      onDataChange({ amountPaid: parseFloat(value) || 0 });
+    }
+  };
+
   const debug = txDetails?.debug;
-  const ledgerDiff = ledgerAmount && data.amount
-    ? parseFloat(ledgerAmount) - parseFloat(data.amount)
-    : null;
-  const ledgerDiffPercent = ledgerDiff !== null && parseFloat(data.amount)
-    ? (ledgerDiff / parseFloat(data.amount)) * 100
-    : null;
 
   return (
     <div className="space-y-6">
@@ -229,46 +219,64 @@ export default function TransactionPreview({ data, txDetails, onConfirm, onEdit,
             </div>
           </div>
 
-          {/* Montant investi (editable) */}
-          <div className="md:col-span-2">
+          {/* Valeur estimee on-chain (informative) */}
+          {isBlockchain && (
+            <div>
+              <div className="flex items-start gap-3">
+                <div className="text-gray-400 dark:text-gray-500 mt-0.5">
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z" />
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
+                    Valeur estimee on-chain
+                    <span className="ml-1 text-xs">(qty x prix spot)</span>
+                  </p>
+                  <p className="text-lg font-medium text-gray-500 dark:text-gray-400">
+                    {formatCurrency(estimatedOnchainValue)}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Montant reellement paye - SOURCE DE VERITE */}
+          <div className={isBlockchain ? 'md:col-span-2' : 'md:col-span-2'}>
             <div className="flex items-start gap-3">
-              <div className="text-indigo-600 dark:text-indigo-400 mt-0.5">
+              <div className="text-green-600 dark:text-green-400 mt-0.5">
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z" />
                 </svg>
               </div>
               <div className="flex-1">
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                  Montant investi
-                  {editMode && (
-                    <span className="ml-2 text-xs text-amber-600 dark:text-amber-400 font-medium">
-                      (modifiable)
-                    </span>
-                  )}
+                <p className="text-sm text-gray-700 dark:text-gray-300 mb-1 font-medium">
+                  Montant reellement paye (EUR)
                 </p>
-                {editMode ? (
-                  <div className="relative">
-                    <input
-                      type="number"
-                      step="0.01"
-                      value={editedAmount}
-                      onChange={(e) => handleAmountChange(e.target.value)}
-                      className="w-full px-3 py-2 text-2xl font-bold border-2 border-amber-400
-                               dark:border-amber-600 rounded-lg bg-amber-50 dark:bg-amber-900/20
-                               text-indigo-600 dark:text-indigo-400
-                               focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
-                    />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm
-                                    text-gray-400">EUR</span>
-                  </div>
-                ) : (
-                  <p className="text-2xl font-semibold text-indigo-600 dark:text-indigo-400">
-                    {formatCurrency(parseFloat(data.amount || 0))}
-                  </p>
-                )}
-                {editMode && (
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    Modifiez le prix ou le montant - l'autre se recalcule automatiquement
+                <div className="relative">
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={amountPaid}
+                    onChange={(e) => handleAmountPaidChange(e.target.value)}
+                    className="w-full px-3 py-2 text-2xl font-bold border-2 border-green-400
+                             dark:border-green-600 rounded-lg bg-green-50 dark:bg-green-900/20
+                             text-green-700 dark:text-green-400
+                             focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">EUR</span>
+                </div>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  Saisissez le montant exact que vous avez paye (virement, CB, etc.)
+                </p>
+                {spread !== null && Math.abs(spread) > 0.01 && (
+                  <p className={`text-xs mt-1 font-medium ${
+                    Math.abs(spread) < amountPaidNum * 0.05
+                      ? 'text-gray-500 dark:text-gray-400'
+                      : 'text-amber-600 dark:text-amber-400'
+                  }`}>
+                    Ecart avec la valeur on-chain : {spread > 0 ? '+' : ''}{formatCurrency(spread)}
+                    {' '}({((spread / (estimatedOnchainValue + feesEur)) * 100).toFixed(2)}%)
                   </p>
                 )}
               </div>
@@ -333,8 +341,8 @@ export default function TransactionPreview({ data, txDetails, onConfirm, onEdit,
                   Mode edition active
                 </h5>
                 <p className="text-xs text-gray-700 dark:text-gray-300">
-                  Corrigez le prix si le prix historique API ne correspond pas au prix reel
-                  de votre achat sur l'exchange. Le montant total sera recalcule automatiquement.
+                  Corrigez le prix spot de reference si necessaire.
+                  La valeur estimee on-chain sera recalculee. Le montant reellement paye n'est pas affecte.
                 </p>
               </div>
             </div>
@@ -393,73 +401,28 @@ export default function TransactionPreview({ data, txDetails, onConfirm, onEdit,
         )}
       </div>
 
-      {/* Ledger Comparison */}
-      {txDetails?.debug && (
-        <div className="bg-amber-50 dark:bg-amber-900/10 rounded-lg p-5 border border-amber-200
-                      dark:border-amber-800/50">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <svg className="w-5 h-5 text-amber-600 dark:text-amber-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
-              </svg>
-              <h4 className="font-semibold text-gray-900 dark:text-gray-100">
-                Comparer avec Ledger Live
-              </h4>
+      {/* Info banner for blockchain transactions */}
+      {isBlockchain && (
+        <div className="bg-blue-50 dark:bg-blue-900/10 rounded-lg p-4 border border-blue-200
+                      dark:border-blue-800/50">
+          <div className="flex items-start gap-3">
+            <svg className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
+            </svg>
+            <div>
+              <p className="text-sm text-gray-700 dark:text-gray-300">
+                Le <strong>montant reellement paye</strong> est la source de verite pour vos calculs de performance.
+                La valeur on-chain et les frais reseau sont affiches a titre indicatif.
+              </p>
+              <button
+                type="button"
+                onClick={() => setShowHelp(true)}
+                className="text-xs text-blue-600 dark:text-blue-400 hover:underline mt-1"
+              >
+                Pourquoi les montants peuvent differer ?
+              </button>
             </div>
-            <button
-              type="button"
-              onClick={() => setShowHelp(true)}
-              className="text-xs text-amber-700 dark:text-amber-400 hover:underline"
-            >
-              Pourquoi les montants different ?
-            </button>
           </div>
-
-          <div className="flex items-center gap-3">
-            <div className="flex-1">
-              <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">
-                Montant affiche dans Ledger Live
-              </label>
-              <div className="relative">
-                <input
-                  type="number"
-                  step="0.01"
-                  value={ledgerAmount}
-                  onChange={(e) => setLedgerAmount(e.target.value)}
-                  placeholder="Ex: 492.69"
-                  className="w-full px-3 py-2 pr-10 rounded-lg border border-amber-300
-                           dark:border-amber-700 bg-white dark:bg-gray-800
-                           text-gray-900 dark:text-gray-100 text-sm
-                           focus:outline-none focus:border-amber-500"
-                />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs
-                              text-gray-400">EUR</span>
-              </div>
-            </div>
-
-            {ledgerDiff !== null && (
-              <div className="text-center pt-4">
-                <p className={`text-lg font-bold ${
-                  Math.abs(ledgerDiffPercent) < 2
-                    ? 'text-green-600 dark:text-green-400'
-                    : 'text-amber-600 dark:text-amber-400'
-                }`}>
-                  {ledgerDiff > 0 ? '+' : ''}{formatCurrency(ledgerDiff)}
-                </p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                  {ledgerDiffPercent > 0 ? '+' : ''}{ledgerDiffPercent.toFixed(2)}%
-                </p>
-              </div>
-            )}
-          </div>
-
-          {ledgerDiff !== null && Math.abs(ledgerDiffPercent) >= 2 && (
-            <p className="mt-3 text-xs text-amber-700 dark:text-amber-400">
-              Ecart de {Math.abs(ledgerDiffPercent).toFixed(1)}% - probablement du a une
-              difference de source de prix (Binance/CryptoCompare vs fournisseur Ledger).
-              Cliquez sur "Pourquoi les montants different ?" pour plus de details.
-            </p>
-          )}
         </div>
       )}
 
@@ -470,16 +433,42 @@ export default function TransactionPreview({ data, txDetails, onConfirm, onEdit,
         </h4>
         <div className="space-y-3 text-sm">
           <div className="flex justify-between items-center">
-            <span className="text-gray-600 dark:text-gray-400">Cout total (investi + frais)</span>
-            <span className="font-semibold text-gray-900 dark:text-gray-100">
-              {formatCurrency(totalCost)}
+            <span className="text-gray-700 dark:text-gray-300 font-medium">Cout d'acquisition</span>
+            <span className="font-bold text-green-700 dark:text-green-400 text-base">
+              {formatCurrency(amountPaidNum)}
             </span>
           </div>
-          {pricePerUnit > 0 && (
-            <div className="flex justify-between items-center">
-              <span className="text-gray-600 dark:text-gray-400">Prix moyen par unite</span>
+          {isBlockchain && estimatedOnchainValue > 0 && (
+            <>
+              <div className="flex justify-between items-center text-gray-500 dark:text-gray-400">
+                <span>Valeur on-chain (qty x prix spot)</span>
+                <span>{formatCurrency(estimatedOnchainValue)}</span>
+              </div>
+              {feesEur > 0 && (
+                <div className="flex justify-between items-center text-gray-500 dark:text-gray-400">
+                  <span>Frais reseau estimes</span>
+                  <span>{formatCurrency(feesEur)}</span>
+                </div>
+              )}
+              {spread !== null && Math.abs(spread) > 0.01 && (
+                <div className="flex justify-between items-center text-gray-400 dark:text-gray-500 italic">
+                  <span>Ecart (spread / commission exchange)</span>
+                  <span>{spread > 0 ? '+' : ''}{formatCurrency(spread)}</span>
+                </div>
+              )}
+            </>
+          )}
+          {!isBlockchain && feesEur > 0 && (
+            <div className="flex justify-between items-center text-gray-500 dark:text-gray-400">
+              <span>dont frais</span>
+              <span>{formatCurrency(feesEur)}</span>
+            </div>
+          )}
+          {parseFloat(data.quantity) > 0 && amountPaidNum > 0 && (
+            <div className="flex justify-between items-center pt-2 border-t border-gray-200 dark:border-gray-700">
+              <span className="text-gray-600 dark:text-gray-400">Prix effectif par unite</span>
               <span className="font-semibold text-gray-900 dark:text-gray-100">
-                {formatCurrency(pricePerUnit)}
+                {formatCurrency(amountPaidNum / parseFloat(data.quantity))}
               </span>
             </div>
           )}
@@ -651,12 +640,20 @@ export default function TransactionPreview({ data, txDetails, onConfirm, onEdit,
           <div className="mt-4 pt-3 border-t border-gray-700">
             <p className="text-gray-500 text-xs mb-1">// Valeur retenue par l'application</p>
             <p className="text-gray-300">
-              <span className="text-white font-bold">montant_investi</span>
+              <span className="text-white font-bold">montant_paye</span>
               <span className="text-gray-500"> = </span>
               <span className="text-green-400 font-bold">
-                {data.amount ? parseFloat(data.amount).toFixed(2) : 'N/A'} EUR
+                {amountPaid ? parseFloat(amountPaid).toFixed(2) : 'N/A'} EUR
               </span>
-              <span className="text-gray-600"> (quantite x prix {debug?.calculation?.priceSource || 'API'}, hors frais)</span>
+              <span className="text-gray-600"> (saisi par l'utilisateur - source de verite)</span>
+            </p>
+            <p className="text-gray-300 mt-1">
+              <span className="text-gray-400">valeur_onchain</span>
+              <span className="text-gray-500"> = </span>
+              <span className="text-yellow-300">
+                {estimatedOnchainValue ? estimatedOnchainValue.toFixed(2) : 'N/A'} EUR
+              </span>
+              <span className="text-gray-600"> (quantite x prix {debug?.calculation?.priceSource || 'API'}, informatif)</span>
             </p>
           </div>
         </div>

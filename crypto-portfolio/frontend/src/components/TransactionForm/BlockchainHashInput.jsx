@@ -2,6 +2,26 @@ import { useState, useEffect } from 'react';
 import api, { getBlockchains } from '../../services/api';
 import { formatQuantity } from '../../utils/calculations';
 
+// Mapping symbole blockchain → symbole pour le logo CDN
+const LOGO_SYMBOL_MAP = {
+  BTC: 'btc',
+  ETH: 'eth',
+  BSC: 'bnb',
+  MATIC: 'matic',
+  SOL: 'sol',
+  AVAX: 'avax',
+  ARB: 'arb',
+  OP: 'op',
+  DOT: 'dot',
+  ADA: 'ada',
+  LINK: 'link',
+};
+
+function getLogoUrl(symbol) {
+  const s = LOGO_SYMBOL_MAP[symbol] || symbol.toLowerCase();
+  return `https://cdn.jsdelivr.net/gh/spothq/cryptocurrency-icons@master/svg/color/${s}.svg`;
+}
+
 // Blockchains par defaut (toujours affichees, meme sans connexion DB)
 const DEFAULT_BLOCKCHAINS = [
   { symbol: 'BTC', name: 'Bitcoin', icon: '\u20bf', needs_recipient_address: true, hash_pattern: '^[a-fA-F0-9]{64}$' },
@@ -20,6 +40,7 @@ export default function BlockchainHashInput({ onValidate, loading, onShowLedgerG
   const [fetchingAddresses, setFetchingAddresses] = useState(false);
   const [autoDetecting, setAutoDetecting] = useState(false);
   const [errors, setErrors] = useState({});
+  const [showAllBlockchains, setShowAllBlockchains] = useState(false);
 
   const selectedBc = availableBlockchains.find(b => b.symbol === blockchain);
   const showAddressField = selectedBc?.needs_recipient_address || false;
@@ -149,13 +170,17 @@ export default function BlockchainHashInput({ onValidate, loading, onShowLedgerG
           Blockchain {autoDetecting && <span className="text-indigo-500 ml-1">(detection auto...)</span>}
         </label>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-          {availableBlockchains.map((bc) => (
+          {(showAllBlockchains ? availableBlockchains : availableBlockchains.slice(0, 6)).map((bc) => (
             <button
               key={bc.symbol}
               type="button"
               onClick={() => {
-                setBlockchain(bc.symbol);
-                setErrors(prev => ({ ...prev, blockchain: '' }));
+                if (blockchain === bc.symbol) {
+                  setBlockchain('');
+                } else {
+                  setBlockchain(bc.symbol);
+                  setErrors(prev => ({ ...prev, blockchain: '' }));
+                }
                 setSuggestedAddresses([]);
                 setRecipientAddress('');
               }}
@@ -166,7 +191,16 @@ export default function BlockchainHashInput({ onValidate, loading, onShowLedgerG
                 }`}
             >
               <div className="flex items-center gap-2 mb-1">
-                <span className="text-2xl">{bc.icon}</span>
+                <img
+                  src={getLogoUrl(bc.symbol)}
+                  alt={bc.symbol}
+                  className="w-7 h-7"
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    e.target.nextSibling.style.display = '';
+                  }}
+                />
+                <span className="text-2xl" style={{ display: 'none' }}>{bc.icon}</span>
                 <span className="font-semibold text-gray-900 dark:text-gray-100">
                   {bc.symbol}
                 </span>
@@ -177,6 +211,19 @@ export default function BlockchainHashInput({ onValidate, loading, onShowLedgerG
             </button>
           ))}
         </div>
+        {availableBlockchains.length > 6 && (
+          <button
+            type="button"
+            onClick={() => setShowAllBlockchains(!showAllBlockchains)}
+            className="mt-2 text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-700
+                     dark:hover:text-indigo-300 font-medium transition-colors"
+          >
+            {showAllBlockchains
+              ? 'Voir moins'
+              : `Voir plus (${availableBlockchains.length - 6} autres)`
+            }
+          </button>
+        )}
         {errors.blockchain && (
           <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.blockchain}</p>
         )}

@@ -2,39 +2,39 @@ import { useState } from 'react';
 
 const FAQ_ITEMS = [
   {
-    question: 'Pourquoi le montant differe de Ledger Live ?',
+    question: 'Pourquoi la valeur on-chain differe de ce que j\'ai paye ?',
     answer:
-      'Ledger Live et notre application utilisent des sources de prix differentes. ' +
-      'Ledger utilise son propre fournisseur de donnees, tandis que nous utilisons CoinGecko. ' +
-      'Les prix historiques peuvent varier de 1 a 5% selon la source, surtout pour les transactions anciennes.',
+      'La valeur on-chain est calculee a partir du prix spot (marche) au moment de la transaction. ' +
+      'Le montant que vous avez reellement paye inclut generalement le spread de l\'exchange, ' +
+      'ses commissions et d\'eventuels frais de paiement. Un ecart de 1 a 5% est normal.',
   },
   {
-    question: 'Quelle source de prix est la plus fiable ?',
+    question: 'Quel montant est utilise pour mes calculs de performance ?',
     answer:
-      'Aucune source n\'est "parfaite" - chaque fournisseur agrege les prix differemment ' +
-      '(moyenne des exchanges, ponderation par volume, etc.). CoinGecko est l\'une des references ' +
-      'les plus utilisees dans l\'ecosysteme crypto. L\'ecart est generalement inferieur a 3%.',
+      'Le "montant reellement paye" que vous saisissez est la source de verite comptable. ' +
+      'C\'est ce montant qui est utilise pour calculer votre prix moyen d\'achat, votre P&L ' +
+      'et votre performance globale. La valeur on-chain est purement informative.',
   },
   {
-    question: 'Comment est calcule le montant investi ?',
+    question: 'Comment remplir le montant reellement paye ?',
     answer:
-      'Le montant investi = quantite recue x prix au moment de la transaction (source CoinGecko). ' +
-      'Les frais de reseau (gas/mining fees) sont affiches separement. ' +
-      'Le "cout total" inclut le montant investi + les frais convertis en EUR.',
+      'Indiquez le montant exact debite de votre compte (virement bancaire, carte, etc.). ' +
+      'Par exemple, si vous avez achete pour 500 EUR de Bitcoin sur Coinbase, saisissez 500. ' +
+      'Ce montant inclut deja les commissions de l\'exchange et le spread.',
   },
   {
-    question: 'Puis-je utiliser le montant de Ledger Live a la place ?',
+    question: 'A quoi sert la valeur estimee on-chain ?',
     answer:
-      'Oui ! Vous pouvez cliquer sur "Modifier" pour revenir en arriere et ajuster manuellement ' +
-      'le montant investi et le prix si vous preferez utiliser les valeurs de Ledger Live. ' +
-      'Le mode debug vous aide a comprendre la difference avant de decider.',
+      'La valeur on-chain (quantite x prix spot) et les frais reseau sont affiches a titre ' +
+      'informatif pour vous aider a verifier la coherence des donnees. Ils ne sont pas utilises ' +
+      'dans les calculs de performance de votre portfolio.',
   },
   {
-    question: 'Pourquoi les frais ne sont pas dans le montant investi ?',
+    question: 'Puis-je modifier le prix spot de reference ?',
     answer:
-      'Les frais de reseau (gas fees, mining fees) sont payes en crypto et separes du montant ' +
-      'recu. C\'est une convention comptable : le montant investi represente la valeur de ce que ' +
-      'vous avez recu, et les frais representent le cout de la transaction elle-meme.',
+      'Oui, le bouton "Modifier le prix" permet d\'ajuster le prix spot utilise comme reference. ' +
+      'Cela met a jour la valeur estimee on-chain mais n\'affecte pas le montant reellement paye ' +
+      'ni vos calculs de performance.',
   },
 ];
 

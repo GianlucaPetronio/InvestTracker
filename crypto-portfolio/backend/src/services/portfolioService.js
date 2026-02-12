@@ -64,7 +64,7 @@ function aggregateDemo() {
     map[tx.asset_symbol].total_quantity += tx.quantity_purchased;
     map[tx.asset_symbol].total_invested += tx.amount_invested;
     map[tx.asset_symbol].total_fees += tx.transaction_fees;
-    map[tx.asset_symbol].weighted_cost += tx.quantity_purchased * tx.price_at_purchase + tx.transaction_fees;
+    map[tx.asset_symbol].weighted_cost += tx.amount_invested + tx.transaction_fees;
     map[tx.asset_symbol].tx_count += 1;
   }
   return Object.values(map);
@@ -141,7 +141,7 @@ async function calculateAssetBreakdown() {
       SUM(quantity_purchased) as total_quantity,
       SUM(amount_invested) as total_invested,
       SUM(transaction_fees) as total_fees,
-      SUM(quantity_purchased * price_at_purchase + transaction_fees) / NULLIF(SUM(quantity_purchased), 0) as avg_price,
+      SUM(amount_invested + transaction_fees) / NULLIF(SUM(quantity_purchased), 0) as avg_price,
       COUNT(*) as tx_count
     FROM transactions
     GROUP BY asset_symbol, asset_name, asset_type

@@ -1,19 +1,19 @@
 import { useState } from 'react';
 import { formatCurrency, formatPercent, formatQuantity } from '../../utils/calculations';
 
-// Icones/emojis pour les cryptos courantes
-const ASSET_ICONS = {
-  BTC: '\u20BF',
-  ETH: '\u039E',
-  BNB: 'B',
-  SOL: 'S',
-  ADA: 'A',
-  DOT: 'D',
-  AVAX: 'A',
-  MATIC: 'M',
-  LINK: 'L',
-  UNI: 'U',
+// Mapping symbole -> slug pour les logos CDN
+const LOGO_SYMBOL_MAP = {
+  BTC: 'btc', ETH: 'eth', BNB: 'bnb', SOL: 'sol',
+  ADA: 'ada', DOT: 'dot', AVAX: 'avax', MATIC: 'matic',
+  LINK: 'link', UNI: 'uni', DOGE: 'doge', XRP: 'xrp',
+  LTC: 'ltc', ATOM: 'atom', NEAR: 'near', APT: 'apt',
+  ARB: 'arb', OP: 'op', FTM: 'ftm', ALGO: 'algo',
 };
+
+function getLogoUrl(symbol) {
+  const s = LOGO_SYMBOL_MAP[symbol] || symbol.toLowerCase();
+  return `https://cdn.jsdelivr.net/gh/spothq/cryptocurrency-icons@master/svg/color/${s}.svg`;
+}
 
 function AssetsTable({ assets = [] }) {
   const [sortKey, setSortKey] = useState('weight');
@@ -88,7 +88,7 @@ function AssetsTable({ assets = [] }) {
             {sorted.map(asset => {
               const isPositive = asset.profitLoss >= 0;
               const pnlColor = isPositive ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400';
-              const icon = ASSET_ICONS[asset.symbol] || asset.symbol.charAt(0);
+              const fallbackIcon = asset.symbol.charAt(0);
               const rawInvested = asset.invested - (asset.totalFees || 0);
 
               return (
@@ -96,8 +96,17 @@ function AssetsTable({ assets = [] }) {
                   {/* Actif */}
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 flex items-center justify-center text-sm font-bold">
-                        {icon}
+                      <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 flex items-center justify-center text-sm font-bold overflow-hidden">
+                        <img
+                          src={getLogoUrl(asset.symbol)}
+                          alt={asset.symbol}
+                          className="w-8 h-8"
+                          onError={(e) => {
+                            e.target.style.display = 'none';
+                            e.target.nextElementSibling.style.display = '';
+                          }}
+                        />
+                        <span style={{ display: 'none' }}>{fallbackIcon}</span>
                       </div>
                       <div>
                         <p className="font-semibold text-gray-900 dark:text-gray-100">{asset.symbol}</p>

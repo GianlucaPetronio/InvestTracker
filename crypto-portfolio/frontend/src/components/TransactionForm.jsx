@@ -15,6 +15,7 @@ function TransactionForm() {
   const [txHash, setTxHash] = useState('');
   const [preview, setPreview] = useState(null);
   const [verifying, setVerifying] = useState(false);
+  const [amountPaid, setAmountPaid] = useState('');
 
   // Champs mode manuel
   const [assetType, setAssetType] = useState('crypto');
@@ -37,6 +38,9 @@ function TransactionForm() {
     try {
       const response = await verifyBlockchainTx(txHash, blockchain);
       setPreview(response.data);
+      const d = response.data;
+      const feesEur = d.priceAtTime && d.fees ? d.fees * d.priceAtTime : 0;
+      setAmountPaid(d.calculatedValue ? String(d.calculatedValue + feesEur) : '');
     } catch (err) {
       setMessage({
         type: 'error',
@@ -61,10 +65,10 @@ function TransactionForm() {
         transaction_hash: preview.hash,
         blockchain: preview.blockchain,
         transaction_date: preview.timestamp,
-        amount_invested: preview.calculatedValue,
+        amount_invested: parseFloat(amountPaid) || preview.calculatedValue,
         price_at_purchase: preview.priceAtTime || 0,
         quantity_purchased: preview.quantity,
-        transaction_fees: preview.fees,
+        transaction_fees: 0,
         source: 'blockchain',
       });
 
@@ -117,6 +121,7 @@ function TransactionForm() {
     setAssetName('');
     setTxHash('');
     setPreview(null);
+    setAmountPaid('');
     setTransactionDate('');
     setAmountInvested('');
     setPriceAtPurchase('');
@@ -225,10 +230,14 @@ function TransactionForm() {
       {/* Prévisualisation des données blockchain */}
       {preview && (
         <div className="mt-6">
-          <TransactionPreview data={preview} />
+          <TransactionPreview
+            data={preview}
+            amountPaid={amountPaid}
+            onAmountPaidChange={setAmountPaid}
+          />
           <button
             onClick={handleConfirmBlockchain}
-            disabled={submitting}
+            disabled={submitting || !amountPaid}
             className="w-full mt-4 bg-green-600 text-white py-3 rounded-lg font-medium hover:bg-green-700 disabled:opacity-50 transition-colors"
           >
             {submitting ? 'Enregistrement...' : 'Confirmer et enregistrer'}
