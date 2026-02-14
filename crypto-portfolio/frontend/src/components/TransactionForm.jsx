@@ -68,7 +68,7 @@ function TransactionForm() {
         amount_invested: parseFloat(amountPaid) || preview.calculatedValue,
         price_at_purchase: preview.priceAtTime || 0,
         quantity_purchased: preview.quantity,
-        transaction_fees: 0,
+        transaction_fees: preview.priceAtTime && preview.fees ? preview.fees * preview.priceAtTime : 0,
         source: 'blockchain',
       });
 

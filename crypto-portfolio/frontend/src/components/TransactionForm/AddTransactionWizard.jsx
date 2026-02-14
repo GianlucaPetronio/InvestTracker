@@ -117,7 +117,9 @@ export default function AddTransactionWizard() {
         amount_invested: parseFloat(formData.amount) || (parseFloat(formData.price) * parseFloat(formData.quantity)),
         price_at_purchase: parseFloat(formData.price) || 0,
         quantity_purchased: parseFloat(formData.quantity),
-        transaction_fees: parseFloat(formData.fees || 0),
+        transaction_fees: isBlockchainSource && formData.feesCrypto
+          ? parseFloat(formData.feesCrypto) * (parseFloat(formData.price) || 0)
+          : parseFloat(formData.fees || 0),
         source: isBlockchainSource ? 'blockchain' : 'manual',
       };
 

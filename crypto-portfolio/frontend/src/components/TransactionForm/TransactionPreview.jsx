@@ -63,7 +63,12 @@ export default function TransactionPreview({ data, txDetails, onConfirm, onEdit,
   const handleSaveEdit = () => {
     const price = parseFloat(editedPrice);
     if (price > 0 && onDataChange) {
-      onDataChange({ price, amount: price * parseFloat(data.quantity) });
+      const updates = { price, amount: price * parseFloat(data.quantity) };
+      // Recalculer les frais EUR depuis les frais crypto quand le prix change
+      if (data.feesCrypto > 0) {
+        updates.fees = parseFloat(data.feesCrypto) * price;
+      }
+      onDataChange(updates);
     }
     setEditMode(false);
   };
