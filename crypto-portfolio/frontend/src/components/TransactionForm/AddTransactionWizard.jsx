@@ -123,14 +123,7 @@ export default function AddTransactionWizard() {
         source: isBlockchainSource ? 'blockchain' : 'manual',
       };
 
-      console.log('=== DEBUG TRANSACTION ===');
-      console.log('1. Payload:', JSON.stringify(payload, null, 2));
-      console.log('2. FormData:', JSON.stringify(formData, null, 2));
-      console.log('3. Type:', transactionType);
-
       const response = await createTransaction(payload);
-
-      console.log('4. Reponse API:', response.data);
 
       navigate('/', {
         state: {
@@ -138,11 +131,6 @@ export default function AddTransactionWizard() {
         },
       });
     } catch (err) {
-      console.error('=== ERREUR TRANSACTION ===');
-      console.error('Status:', err.response?.status);
-      console.error('Data:', err.response?.data);
-      console.error('Message:', err.message);
-
       const errorDetail = err.response?.data?.error
         || err.response?.data?.details
         || err.message;

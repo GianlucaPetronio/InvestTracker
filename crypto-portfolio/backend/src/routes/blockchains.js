@@ -15,8 +15,7 @@ router.get('/', async (req, res) => {
     const blockchains = await blockchainManager.getAllBlockchains(includeInactive);
     res.json({ success: true, blockchains });
   } catch (error) {
-    console.error('Error fetching blockchains:', error);
-    res.status(500).json({ success: false, error: error.message });
+    res.status(500).json({ success: false, error: 'Erreur interne du serveur' });
   }
 });
 
@@ -31,8 +30,7 @@ router.get('/:symbol', async (req, res) => {
     }
     res.json({ success: true, blockchain });
   } catch (error) {
-    console.error('Error fetching blockchain:', error);
-    res.status(500).json({ success: false, error: error.message });
+    res.status(500).json({ success: false, error: 'Erreur interne du serveur' });
   }
 });
 
@@ -60,7 +58,6 @@ router.post('/', async (req, res) => {
 
     res.status(201).json({ success: true, blockchain });
   } catch (error) {
-    console.error('Error creating blockchain:', error);
     const status = error.message.includes('existe déjà') || error.message.includes('duplicate') ? 409 : 400;
     res.status(status).json({ success: false, error: error.message });
   }
@@ -82,7 +79,6 @@ router.put('/:symbol', async (req, res) => {
 
     res.json({ success: true, blockchain });
   } catch (error) {
-    console.error('Error updating blockchain:', error);
     res.status(400).json({ success: false, error: error.message });
   }
 });
@@ -95,7 +91,6 @@ router.delete('/:symbol', async (req, res) => {
     const blockchain = await blockchainManager.deleteBlockchain(req.params.symbol);
     res.json({ success: true, blockchain });
   } catch (error) {
-    console.error('Error deleting blockchain:', error);
     res.status(400).json({ success: false, error: error.message });
   }
 });
@@ -111,7 +106,6 @@ router.post('/:symbol/toggle', async (req, res) => {
     }
     res.json({ success: true, blockchain });
   } catch (error) {
-    console.error('Error toggling blockchain:', error);
     res.status(400).json({ success: false, error: error.message });
   }
 });
@@ -128,7 +122,6 @@ router.post('/:symbol/api-key', async (req, res) => {
     await blockchainManager.setApiKey(req.params.symbol, api_key, label);
     res.json({ success: true, message: 'Clé API sauvegardée' });
   } catch (error) {
-    console.error('Error saving API key:', error);
     res.status(400).json({ success: false, error: error.message });
   }
 });
@@ -141,7 +134,6 @@ router.delete('/:symbol/api-key', async (req, res) => {
     await blockchainManager.removeApiKey(req.params.symbol);
     res.json({ success: true, message: 'Clé API supprimée' });
   } catch (error) {
-    console.error('Error removing API key:', error);
     res.status(400).json({ success: false, error: error.message });
   }
 });

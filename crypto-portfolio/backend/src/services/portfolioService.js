@@ -73,7 +73,7 @@ function aggregateDemo() {
 // ---------------------------------------------------------------------------
 // Statistiques globales du portfolio
 // ---------------------------------------------------------------------------
-async function calculateGlobalStats() {
+async function calculateGlobalStats(userId) {
   const result = await tryQuery(`
     SELECT
       asset_symbol,
@@ -82,8 +82,9 @@ async function calculateGlobalStats() {
       SUM(amount_invested) as total_invested,
       SUM(transaction_fees) as total_fees
     FROM transactions
+    WHERE user_id = $1
     GROUP BY asset_symbol, asset_type
-  `);
+  `, [userId]);
 
   const assets = result ? result.rows : aggregateDemo();
   if (assets.length === 0) {
@@ -132,7 +133,7 @@ async function calculateGlobalStats() {
 // ---------------------------------------------------------------------------
 // Détail par actif avec métriques complètes (frais inclus)
 // ---------------------------------------------------------------------------
-async function calculateAssetBreakdown() {
+async function calculateAssetBreakdown(userId) {
   const result = await tryQuery(`
     SELECT
       asset_symbol,
@@ -144,9 +145,10 @@ async function calculateAssetBreakdown() {
       SUM(amount_invested + transaction_fees) / NULLIF(SUM(quantity_purchased), 0) as avg_price,
       COUNT(*) as tx_count
     FROM transactions
+    WHERE user_id = $1
     GROUP BY asset_symbol, asset_name, asset_type
     ORDER BY SUM(amount_invested) + SUM(transaction_fees) DESC
-  `);
+  `, [userId]);
 
   let assets;
   let prices;
@@ -222,9 +224,9 @@ async function calculateAssetBreakdown() {
 // ---------------------------------------------------------------------------
 // Historique d'évolution du portfolio (investissement cumulé par jour)
 // ---------------------------------------------------------------------------
-async function calculatePortfolioHistory(period) {
-  let dateFilter = '';
-  const params = [];
+async function calculatePortfolioHistory(userId, period) {
+  const params = [userId];
+  let dateFilter = 'WHERE user_id = $1';
 
   if (period && period !== 'ALL') {
     const periodMap = {
@@ -236,7 +238,7 @@ async function calculatePortfolioHistory(period) {
     const interval = periodMap[period];
     if (interval) {
       params.push(interval);
-      dateFilter = `WHERE transaction_date >= NOW() - $1::interval`;
+      dateFilter += ` AND transaction_date >= NOW() - $${params.length}::interval`;
     }
   }
 
@@ -254,12 +256,13 @@ async function calculatePortfolioHistory(period) {
 
   if (result) {
     // Si on filtre par période, le cumulatif doit inclure les transactions antérieures
-    if (dateFilter && result.rows.length > 0) {
+    const hasPeriodFilter = params.length > 1;
+    if (hasPeriodFilter && result.rows.length > 0) {
       const priorResult = await query(`
         SELECT COALESCE(SUM(amount_invested + transaction_fees), 0) as prior_total
         FROM transactions
-        WHERE transaction_date < $1::date
-      `, [result.rows[0].date]);
+        WHERE user_id = $1 AND transaction_date < $2::date
+      `, [userId, result.rows[0].date]);
 
       const priorTotal = parseFloat(priorResult.rows[0].prior_total);
       if (priorTotal > 0) {
@@ -318,8 +321,8 @@ async function calculatePortfolioHistory(period) {
 // ---------------------------------------------------------------------------
 // Répartition du portfolio pour le pie chart
 // ---------------------------------------------------------------------------
-async function calculateAllocation() {
-  const assets = await calculateAssetBreakdown();
+async function calculateAllocation(userId) {
+  const assets = await calculateAssetBreakdown(userId);
 
   const totalValue = assets.reduce((sum, a) => sum + a.currentValue, 0);
 
@@ -335,7 +338,7 @@ async function calculateAllocation() {
 // ---------------------------------------------------------------------------
 // Dernières transactions
 // ---------------------------------------------------------------------------
-async function getRecentTransactions(limit = 5) {
+async function getRecentTransactions(userId, limit = 5) {
   const result = await tryQuery(`
     SELECT
       id, asset_symbol, asset_name, asset_type,
@@ -343,9 +346,10 @@ async function getRecentTransactions(limit = 5) {
       quantity_purchased, transaction_fees, source, blockchain,
       transaction_hash, created_at
     FROM transactions
+    WHERE user_id = $1
     ORDER BY transaction_date DESC
-    LIMIT $1
-  `, [limit]);
+    LIMIT $2
+  `, [userId, limit]);
 
   if (result) return result.rows;
 
@@ -359,7 +363,7 @@ async function getRecentTransactions(limit = 5) {
 // Historique d'évolution par actif (pour le graphique multi-lignes)
 // Retourne un objet { symbol: [{ date, value, quantity }, ...] }
 // ---------------------------------------------------------------------------
-async function calculateAssetHistory(period) {
+async function calculateAssetHistory(userId, period) {
   // Récupérer toutes les transactions
   const result = await tryQuery(`
     SELECT
@@ -368,8 +372,9 @@ async function calculateAssetHistory(period) {
       quantity_purchased, price_at_purchase,
       amount_invested, transaction_fees
     FROM transactions
+    WHERE user_id = $1
     ORDER BY transaction_date ASC
-  `);
+  `, [userId]);
 
   const transactions = result ? result.rows : [...DEMO_TRANSACTIONS].sort(
     (a, b) => new Date(a.transaction_date) - new Date(b.transaction_date)

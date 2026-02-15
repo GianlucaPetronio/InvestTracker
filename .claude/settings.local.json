@@ -12,7 +12,14 @@
       "WebFetch(domain:support.coingecko.com)",
       "WebFetch(domain:developers.coindesk.com)",
       "Bash(test:*)",
-      "Bash(pg_isready:*)"
+      "Bash(pg_isready:*)",
+      "Bash(set:*)",
+      "Bash(psql:*)",
+      "Bash(dir:*)",
+      "Bash(findstr:*)",
+      "Bash(docker cp:*)",
+      "Bash(docker exec:*)",
+      "Bash(if not exist \"Q:\\\\Gianluca_Perso\\\\InvestTracker\\\\crypto-portfolio\\\\backend\\\\src\\\\middleware\" mkdir \"Q:\\\\Gianluca_Perso\\\\InvestTracker\\\\crypto-portfolio\\\\backend\\\\src\\\\middleware\")"
     ]
   }
 }

@@ -99,6 +99,88 @@ async function getBitcoinTxDetails(txHash, blockchainConfig, recipientAddress = 
 
 
 // ---------------------------------------------------------------------------
+// Solana - via Solana JSON-RPC API (public ou Helius)
+// ---------------------------------------------------------------------------
+async function getSolanaTxDetails(txHash, blockchainConfig, recipientAddress = null) {
+  const rpcUrl = blockchainConfig.api_url || 'https://api.mainnet-beta.solana.com';
+
+  try {
+    const response = await axios.post(rpcUrl, {
+      jsonrpc: '2.0',
+      id: 1,
+      method: 'getTransaction',
+      params: [txHash, { encoding: 'jsonParsed', maxSupportedTransactionVersion: 0 }],
+    });
+
+    const tx = response.data.result;
+    if (!tx) {
+      throw new Error('Transaction Solana non trouvee');
+    }
+
+    const fee = tx.meta.fee / 1e9; // lamports -> SOL
+    const timestamp = tx.blockTime
+      ? new Date(tx.blockTime * 1000).toISOString()
+      : null;
+
+    // Detecter les transferts SOL via les changements de balance
+    const accountKeys = tx.transaction.message.accountKeys;
+    const preBalances = tx.meta.preBalances;
+    const postBalances = tx.meta.postBalances;
+
+    const outputs = [];
+    let fromAddress = null;
+
+    for (let i = 0; i < accountKeys.length; i++) {
+      const address = typeof accountKeys[i] === 'string'
+        ? accountKeys[i]
+        : accountKeys[i].pubkey;
+      const diff = (postBalances[i] - preBalances[i]) / 1e9;
+
+      if (diff < 0) {
+        if (!fromAddress) fromAddress = address;
+      } else if (diff > 0) {
+        outputs.push({ address, value: diff });
+      }
+    }
+
+    let quantity;
+    let relevantOutputs;
+
+    if (recipientAddress) {
+      const matched = outputs.filter(o => o.address === recipientAddress);
+      if (matched.length === 0) {
+        throw new Error("Cette adresse n'a pas recu de fonds dans cette transaction");
+      }
+      quantity = matched.reduce((sum, o) => sum + o.value, 0);
+      relevantOutputs = matched.length;
+    } else {
+      quantity = outputs.reduce((sum, o) => sum + o.value, 0);
+      relevantOutputs = outputs.length;
+    }
+
+    return {
+      hash: txHash,
+      blockchain: blockchainConfig.symbol,
+      timestamp,
+      confirmations: tx.meta.err ? 'echouee' : 'confirmee',
+      blockHeight: tx.slot,
+      from: fromAddress,
+      to: recipientAddress || outputs[0]?.address || null,
+      quantity,
+      fees: fee,
+      outputs,
+      totalOutputs: outputs.length,
+      relevantOutputs,
+    };
+  } catch (error) {
+    if (error.message.includes('non trouvee')) throw error;
+    if (error.message.includes('pas recu de fonds')) throw error;
+    throw new Error(`Erreur API Solana: ${error.message}`);
+  }
+}
+
+
+// ---------------------------------------------------------------------------
 // Handler generique Etherscan-like (ETH, BSC, MATIC, ARB, OP, AVAX, etc.)
 // ---------------------------------------------------------------------------
 async function getEtherscanLikeTxDetails(txHash, blockchainConfig, apiKey, recipientAddress = null) {
@@ -202,6 +284,8 @@ async function getTransactionDetails(txHash, blockchain, recipientAddress = null
       return getBitcoinTxDetails(txHash, config, recipientAddress);
     case 'etherscan':
       return getEtherscanLikeTxDetails(txHash, config, apiKey, recipientAddress);
+    case 'solana':
+      return getSolanaTxDetails(txHash, config, recipientAddress);
     case 'unsupported':
       throw new Error(
         `La recuperation automatique n'est pas disponible pour ${config.name}. ` +
@@ -428,6 +512,34 @@ async function getTransactionOutputAddresses(txHash, blockchain) {
           amount: parseInt(tx.value, 16) / 1e18,
         }],
       };
+    }
+
+    if (config.api_type === 'solana') {
+      const rpcUrl = config.api_url || 'https://api.mainnet-beta.solana.com';
+      const rpcResponse = await axios.post(rpcUrl, {
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'getTransaction',
+        params: [txHash, { encoding: 'jsonParsed', maxSupportedTransactionVersion: 0 }],
+      });
+      const tx = rpcResponse.data.result;
+      if (!tx) {
+        return { success: false, error: 'Transaction non trouvee' };
+      }
+      const accountKeys = tx.transaction.message.accountKeys;
+      const preBalances = tx.meta.preBalances;
+      const postBalances = tx.meta.postBalances;
+      const addresses = [];
+      for (let i = 0; i < accountKeys.length; i++) {
+        const address = typeof accountKeys[i] === 'string'
+          ? accountKeys[i]
+          : accountKeys[i].pubkey;
+        const diff = (postBalances[i] - preBalances[i]) / 1e9;
+        if (diff > 0) {
+          addresses.push({ address, amount: diff });
+        }
+      }
+      return { success: true, addresses };
     }
 
     return {

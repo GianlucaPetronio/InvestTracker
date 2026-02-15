@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getTransactions, deleteTransaction } from '../services/api';
+import { getTransactions, deleteTransaction, deleteTransactionsBulk } from '../services/api';
 import { formatCurrency, formatQuantity } from '../utils/calculations';
 import EditTransactionModal from './EditTransactionModal';
 
@@ -11,10 +11,17 @@ function TransactionHistory() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all'); // 'all', 'crypto', 'traditional'
   const [editingTx, setEditingTx] = useState(null);
+  const [selected, setSelected] = useState(new Set());
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     fetchTransactions();
   }, [filter]);
+
+  // Vider la selection quand les transactions changent
+  useEffect(() => {
+    setSelected(new Set());
+  }, [transactions]);
 
   async function fetchTransactions() {
     setLoading(true);
@@ -40,10 +47,45 @@ function TransactionHistory() {
     }
   }
 
+  async function handleBulkDelete() {
+    const count = selected.size;
+    if (!window.confirm(`Supprimer ${count} transaction(s) ?`)) return;
+    setDeleting(true);
+    try {
+      const ids = [...selected];
+      await deleteTransactionsBulk(ids);
+      setTransactions(prev => prev.filter(tx => !selected.has(tx.id)));
+    } catch {
+      alert('Erreur lors de la suppression');
+    } finally {
+      setDeleting(false);
+    }
+  }
+
+  function toggleSelect(id) {
+    setSelected(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function toggleSelectAll() {
+    if (selected.size === transactions.length) {
+      setSelected(new Set());
+    } else {
+      setSelected(new Set(transactions.map(tx => tx.id)));
+    }
+  }
+
   function handleEditSaved() {
     setEditingTx(null);
     fetchTransactions();
   }
+
+  const allSelected = transactions.length > 0 && selected.size === transactions.length;
+  const someSelected = selected.size > 0;
 
   return (
     <div className="space-y-6">
@@ -68,6 +110,31 @@ function TransactionHistory() {
         </div>
       </div>
 
+      {/* Barre d'actions de selection */}
+      {someSelected && (
+        <div className="flex items-center gap-4 bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-200 dark:border-indigo-800 rounded-lg px-4 py-3">
+          <span className="text-sm font-medium text-indigo-700 dark:text-indigo-300">
+            {selected.size} transaction(s) selectionnee(s)
+          </span>
+          <button
+            onClick={handleBulkDelete}
+            disabled={deleting}
+            className="ml-auto flex items-center gap-1.5 px-3 py-1.5 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white text-sm font-medium rounded-lg transition-colors"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+            </svg>
+            {deleting ? 'Suppression...' : 'Supprimer'}
+          </button>
+          <button
+            onClick={() => setSelected(new Set())}
+            className="px-3 py-1.5 text-sm text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 transition-colors"
+          >
+            Annuler
+          </button>
+        </div>
+      )}
+
       {loading ? (
         <div className="text-center py-12 text-gray-500 dark:text-gray-400">Chargement...</div>
       ) : transactions.length === 0 ? (
@@ -80,6 +147,14 @@ function TransactionHistory() {
             <table className="w-full">
               <thead className="bg-gray-50 dark:bg-gray-700/50">
                 <tr>
+                  <th className="px-4 py-3 text-left w-10">
+                    <input
+                      type="checkbox"
+                      checked={allSelected}
+                      onChange={toggleSelectAll}
+                      className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                    />
+                  </th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Date</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Actif</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Source</th>
@@ -92,7 +167,20 @@ function TransactionHistory() {
               </thead>
               <tbody className="divide-y divide-gray-100 dark:divide-gray-700/50">
                 {transactions.map((tx) => (
-                  <tr key={tx.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
+                  <tr
+                    key={tx.id}
+                    className={`hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors ${
+                      selected.has(tx.id) ? 'bg-indigo-50/50 dark:bg-indigo-900/20' : ''
+                    }`}
+                  >
+                    <td className="px-4 py-3">
+                      <input
+                        type="checkbox"
+                        checked={selected.has(tx.id)}
+                        onChange={() => toggleSelect(tx.id)}
+                        className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                      />
+                    </td>
                     <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">
                       {new Date(tx.transaction_date).toLocaleDateString('fr-FR')}
                     </td>

@@ -73,8 +73,10 @@ router.post('/verify', async (req, res) => {
       assetSymbol: priceSymbol,
     });
   } catch (error) {
-    const status = error.message.includes('non trouvée') ? 404 : 500;
-    res.status(status).json({ error: error.message });
+    const isNotFound = error.message.includes('non trouvée') || error.message.includes('non trouvee');
+    res.status(isNotFound ? 404 : 500).json({
+      error: isNotFound ? 'Transaction non trouvee' : 'Erreur interne du serveur'
+    });
   }
 });
 
@@ -104,7 +106,6 @@ router.post('/validate', async (req, res) => {
 
     res.json(result);
   } catch (error) {
-    console.error('Error validating transaction:', error);
     res.status(500).json({
       success: false,
       error: 'SERVER_ERROR',
@@ -137,7 +138,6 @@ router.get('/detect/:hash', async (req, res) => {
       message: 'Format de hash non reconnu',
     });
   } catch (error) {
-    console.error('Error detecting blockchain:', error);
     res.status(500).json({ success: false, message: 'Erreur serveur' });
   }
 });
@@ -158,7 +158,6 @@ router.get('/outputs/:blockchain/:hash', async (req, res) => {
 
     res.json(result);
   } catch (error) {
-    console.error('Error fetching outputs:', error);
     res.status(500).json({
       success: false,
       error: 'SERVER_ERROR',

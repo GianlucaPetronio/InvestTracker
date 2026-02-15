@@ -23,13 +23,14 @@ router.get('/', async (req, res) => {
         MIN(transaction_date) as first_purchase,
         MAX(transaction_date) as last_purchase
       FROM transactions
+      WHERE user_id = $1
       GROUP BY asset_symbol, asset_name, asset_type
       ORDER BY asset_symbol
-    `);
+    `, [req.user.id]);
 
     res.json(result.rows);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Erreur interne du serveur' });
   }
 });
 
@@ -42,8 +43,8 @@ router.get('/:symbol', async (req, res) => {
 
     // Récupérer les transactions de cet actif
     const txResult = await query(
-      `SELECT * FROM transactions WHERE asset_symbol = $1 ORDER BY transaction_date DESC`,
-      [symbol]
+      `SELECT * FROM transactions WHERE asset_symbol = $1 AND user_id = $2 ORDER BY transaction_date DESC`,
+      [symbol, req.user.id]
     );
 
     if (txResult.rows.length === 0) {
@@ -81,7 +82,7 @@ router.get('/:symbol', async (req, res) => {
       transactions: txResult.rows,
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Erreur interne du serveur' });
   }
 });
 
@@ -91,7 +92,8 @@ router.get('/:symbol', async (req, res) => {
 router.get('/prices/current', async (req, res) => {
   try {
     const result = await query(
-      `SELECT DISTINCT asset_symbol FROM transactions WHERE asset_type = 'crypto'`
+      `SELECT DISTINCT asset_symbol FROM transactions WHERE asset_type = 'crypto' AND user_id = $1`,
+      [req.user.id]
     );
 
     const symbols = result.rows.map(r => r.asset_symbol);
@@ -102,7 +104,7 @@ router.get('/prices/current', async (req, res) => {
     const prices = await getMultiplePrices(symbols);
     res.json(prices);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Erreur interne du serveur' });
   }
 });
 

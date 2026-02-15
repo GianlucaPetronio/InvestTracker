@@ -4,6 +4,20 @@ import { getRecentTransactions } from '../../services/api';
 import { formatCurrency, formatQuantity } from '../../utils/calculations';
 import EditTransactionModal from '../EditTransactionModal';
 
+// Mapping symbole -> slug pour les logos CDN
+const LOGO_SYMBOL_MAP = {
+  BTC: 'btc', ETH: 'eth', BNB: 'bnb', SOL: 'sol',
+  ADA: 'ada', DOT: 'dot', AVAX: 'avax', MATIC: 'matic',
+  LINK: 'link', UNI: 'uni', DOGE: 'doge', XRP: 'xrp',
+  LTC: 'ltc', ATOM: 'atom', NEAR: 'near', APT: 'apt',
+  ARB: 'arb', OP: 'op', FTM: 'ftm', ALGO: 'algo',
+};
+
+function getLogoUrl(symbol) {
+  const s = LOGO_SYMBOL_MAP[symbol] || symbol.toLowerCase();
+  return `https://cdn.jsdelivr.net/gh/spothq/cryptocurrency-icons@master/svg/color/${s}.svg`;
+}
+
 function timeAgo(dateStr) {
   const date = new Date(dateStr);
   const now = new Date();
@@ -89,13 +103,27 @@ function RecentTransactions() {
                 key={tx.id}
                 className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors group"
               >
-                {/* Icone actif */}
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold ${
-                  tx.asset_type === 'crypto'
-                    ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400'
-                    : 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'
-                }`}>
-                  {tx.asset_symbol.charAt(0)}
+                {/* Logo actif */}
+                <div className="w-10 h-10 rounded-full flex items-center justify-center overflow-hidden bg-gray-100 dark:bg-gray-700 flex-shrink-0">
+                  <img
+                    src={getLogoUrl(tx.asset_symbol)}
+                    alt={tx.asset_symbol}
+                    className="w-8 h-8"
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                      e.target.nextElementSibling.style.display = '';
+                    }}
+                  />
+                  <span
+                    style={{ display: 'none' }}
+                    className={`text-sm font-bold ${
+                      tx.asset_type === 'crypto'
+                        ? 'text-purple-700 dark:text-purple-400'
+                        : 'text-blue-700 dark:text-blue-400'
+                    }`}
+                  >
+                    {tx.asset_symbol.charAt(0)}
+                  </span>
                 </div>
 
                 {/* Info */}

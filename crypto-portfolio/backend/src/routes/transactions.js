@@ -14,8 +14,8 @@ router.get('/', async (req, res) => {
   try {
     const { asset_symbol, asset_type, limit = 50, offset = 0 } = req.query;
 
-    let sql = 'SELECT * FROM transactions WHERE 1=1';
-    const params = [];
+    const params = [req.user.id];
+    let sql = 'SELECT * FROM transactions WHERE user_id = $1';
 
     if (asset_symbol) {
       params.push(asset_symbol.toUpperCase());
@@ -44,7 +44,7 @@ router.get('/', async (req, res) => {
 // ---------------------------------------------------------------------------
 router.get('/:id', async (req, res) => {
   try {
-    const result = await query('SELECT * FROM transactions WHERE id = $1', [req.params.id]);
+    const result = await query('SELECT * FROM transactions WHERE id = $1 AND user_id = $2', [req.params.id, req.user.id]);
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Transaction non trouvée' });
     }
@@ -58,9 +58,6 @@ router.get('/:id', async (req, res) => {
 // POST /api/transactions - Créer une transaction (manuelle ou blockchain)
 // ---------------------------------------------------------------------------
 router.post('/', async (req, res) => {
-  console.log('=== POST /api/transactions ===');
-  console.log('Body recu:', JSON.stringify(req.body, null, 2));
-
   try {
     const {
       asset_symbol, asset_name, asset_type,
@@ -71,12 +68,6 @@ router.post('/', async (req, res) => {
 
     // Validation des champs requis (toutes sources)
     if (!asset_symbol || !transaction_date || !price_at_purchase || !quantity_purchased) {
-      console.error('Validation echouee - champs manquants:', {
-        asset_symbol: !asset_symbol,
-        transaction_date: !transaction_date,
-        price_at_purchase: !price_at_purchase,
-        quantity_purchased: !quantity_purchased,
-      });
       return res.status(400).json({
         error: 'Champs requis manquants',
         missing: {
@@ -92,44 +83,38 @@ router.post('/', async (req, res) => {
     if (source === 'manual') {
       const validation = validateManualTransaction(req.body);
       if (!validation.valid) {
-        console.error('Validation manuelle echouee:', validation.errors);
         return res.status(400).json({ error: validation.errors.join(', ') });
       }
     }
 
-    // Vérifier si le hash existe déjà (éviter les doublons)
+    // Vérifier si le hash existe déjà (éviter les doublons par utilisateur)
     if (transaction_hash) {
-      console.log('Verification doublon pour hash:', transaction_hash);
       const existing = await query(
-        'SELECT id FROM transactions WHERE transaction_hash = $1',
-        [transaction_hash]
+        'SELECT id FROM transactions WHERE transaction_hash = $1 AND user_id = $2',
+        [transaction_hash, req.user.id]
       );
       if (existing.rows.length > 0) {
-        console.log('Doublon detecte - transaction existante id:', existing.rows[0].id);
         return res.status(409).json({
           error: 'Cette transaction existe déjà dans votre portfolio'
         });
       }
     }
 
-    console.log('Insertion dans la DB...');
-
     const result = await query(
       `INSERT INTO transactions
         (asset_symbol, asset_name, asset_type, transaction_hash, blockchain,
          transaction_date, amount_invested, price_at_purchase, quantity_purchased,
-         transaction_fees, source)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+         transaction_fees, source, user_id)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
        RETURNING *`,
       [
         asset_symbol.toUpperCase(), asset_name || asset_symbol.toUpperCase(), asset_type || 'crypto',
         transaction_hash || null, blockchain || null,
         transaction_date, amount_invested || (price_at_purchase * quantity_purchased),
         price_at_purchase, quantity_purchased, transaction_fees || 0, source || 'manual',
+        req.user.id,
       ]
     );
-
-    console.log('[OK] Transaction creee:', result.rows[0].id, '-', result.rows[0].asset_symbol);
 
     res.status(201).json({
       success: true,
@@ -137,15 +122,11 @@ router.post('/', async (req, res) => {
       message: 'Transaction créée avec succès'
     });
   } catch (error) {
-    console.error('[ERREUR] Creation transaction:', error.message);
-    console.error('Stack:', error.stack);
     if (error.code === '23505') {
       return res.status(409).json({ error: 'Cette transaction blockchain existe déjà' });
     }
     res.status(500).json({
-      error: 'Erreur lors de la création de la transaction',
-      details: error.message,
-      code: error.code || null
+      error: 'Erreur lors de la création de la transaction'
     });
   }
 });
@@ -172,12 +153,13 @@ router.put('/:id', async (req, res) => {
         quantity_purchased = COALESCE($7, quantity_purchased),
         transaction_fees = COALESCE($8, transaction_fees),
         updated_at = CURRENT_TIMESTAMP
-       WHERE id = $9
+       WHERE id = $9 AND user_id = $10
        RETURNING *`,
       [
         asset_symbol, asset_name, asset_type,
         transaction_date, amount_invested, price_at_purchase,
         quantity_purchased, transaction_fees, req.params.id,
+        req.user.id,
       ]
     );
 
@@ -191,11 +173,37 @@ router.put('/:id', async (req, res) => {
 });
 
 // ---------------------------------------------------------------------------
+// DELETE /api/transactions/bulk - Supprimer plusieurs transactions
+// ---------------------------------------------------------------------------
+router.delete('/bulk', async (req, res) => {
+  try {
+    const { ids } = req.body;
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ error: 'Liste d\'ids requise' });
+    }
+
+    // Construire les placeholders $2, $3, $4...
+    const placeholders = ids.map((_, i) => `$${i + 2}`).join(', ');
+    const result = await query(
+      `DELETE FROM transactions WHERE user_id = $1 AND id IN (${placeholders}) RETURNING id`,
+      [req.user.id, ...ids]
+    );
+
+    res.json({
+      message: `${result.rows.length} transaction(s) supprimee(s)`,
+      deletedIds: result.rows.map(r => r.id),
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ---------------------------------------------------------------------------
 // DELETE /api/transactions/:id - Supprimer une transaction
 // ---------------------------------------------------------------------------
 router.delete('/:id', async (req, res) => {
   try {
-    const result = await query('DELETE FROM transactions WHERE id = $1 RETURNING *', [req.params.id]);
+    const result = await query('DELETE FROM transactions WHERE id = $1 AND user_id = $2 RETURNING *', [req.params.id, req.user.id]);
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Transaction non trouvée' });
     }

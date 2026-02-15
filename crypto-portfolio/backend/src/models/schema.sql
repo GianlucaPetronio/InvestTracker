@@ -64,6 +64,7 @@ CREATE INDEX idx_price_cache_timestamp ON price_cache(timestamp);
 -- api_type détermine le handler utilisé :
 --   'bitcoin'     -> getBitcoinTxDetails (Blockchain.info API)
 --   'etherscan'   -> getEtherscanLikeTxDetails (générique pour toutes les EVM chains)
+--   'solana'      -> getSolanaTxDetails (Solana JSON-RPC API)
 --   'unsupported' -> pas de récupération automatique (erreur explicite)
 
 CREATE TABLE blockchains (
@@ -104,7 +105,7 @@ VALUES
     false, 'MATIC','etherscan',   'https://api.polygonscan.com/api',               'POLYGONSCAN_API_KEY', true, false),
   ('SOL',   'Solana',           '◎', '^[1-9A-HJ-NP-Za-km-z]{87,88}$',
     '^[1-9A-HJ-NP-Za-km-z]{32,44}$',
-    true,  'SOL',  'unsupported', NULL,                                            NULL,                  true, false),
+    true,  'SOL',  'solana',      'https://api.mainnet-beta.solana.com',            NULL,                  true, false),
   ('AVAX',  'Avalanche',        '▲', '^0x[a-fA-F0-9]{64}$',
     '^0x[a-fA-F0-9]{40}$',
     false, 'AVAX', 'etherscan',   'https://api.snowtrace.io/api',                 'SNOWTRACE_API_KEY',   true, false),
@@ -113,7 +114,22 @@ VALUES
     false, 'ETH',  'etherscan',   'https://api.arbiscan.io/api',                  'ARBISCAN_API_KEY',    true, false),
   ('OP',    'Optimism',         '○', '^0x[a-fA-F0-9]{64}$',
     '^0x[a-fA-F0-9]{40}$',
-    false, 'ETH',  'etherscan',   'https://api-optimistic.etherscan.io/api',      'OPTIMISM_API_KEY',    true, false)
+    false, 'ETH',  'etherscan',   'https://api-optimistic.etherscan.io/api',      'OPTIMISM_API_KEY',    true, false),
+  ('BASE',  'Base',             '△', '^0x[a-fA-F0-9]{64}$',
+    '^0x[a-fA-F0-9]{40}$',
+    false, 'ETH',  'etherscan',   'https://api.basescan.org/api',                  'BASESCAN_API_KEY',    true, false),
+  ('FTM',   'Fantom',           '◆', '^0x[a-fA-F0-9]{64}$',
+    '^0x[a-fA-F0-9]{40}$',
+    false, 'FTM',  'etherscan',   'https://api.ftmscan.com/api',                   'FTMSCAN_API_KEY',     true, false),
+  ('CRO',   'Cronos',           '◈', '^0x[a-fA-F0-9]{64}$',
+    '^0x[a-fA-F0-9]{40}$',
+    false, 'CRO',  'etherscan',   'https://api.cronoscan.com/api',                 'CRONOSCAN_API_KEY',   true, false),
+  ('LINEA', 'Linea',            '■', '^0x[a-fA-F0-9]{64}$',
+    '^0x[a-fA-F0-9]{40}$',
+    false, 'ETH',  'etherscan',   'https://api.lineascan.build/api',               'LINEASCAN_API_KEY',   true, false),
+  ('ZKSYNC','zkSync Era',       '◊', '^0x[a-fA-F0-9]{64}$',
+    '^0x[a-fA-F0-9]{40}$',
+    false, 'ETH',  'etherscan',   'https://api-era.zksync.network/api',            'ZKSYNC_API_KEY',      true, false)
 ON CONFLICT (symbol) DO NOTHING;
 
 -- =============================================================================

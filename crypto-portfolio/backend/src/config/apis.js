@@ -61,6 +61,12 @@ const BINANCE_EUR_SYMBOLS = {
   XRP: 'XRPEUR',
   OP: 'OPEUR',
   ARB: 'ARBEUR',
+  FTM: 'FTMEUR',
+  CRO: 'CROEUR',
+  DOGE: 'DOGEEUR',
+  LTC: 'LTCEUR',
+  NEAR: 'NEAREUR',
+  APT: 'APTEUR',
 };
 
 // CoinGecko : mapping symbole -> id CoinGecko
@@ -78,6 +84,12 @@ const COINGECKO_IDS = {
   OP: 'optimism',
   ARB: 'arbitrum',
   XRP: 'ripple',
+  FTM: 'fantom',
+  CRO: 'crypto-com-chain',
+  DOGE: 'dogecoin',
+  LTC: 'litecoin',
+  NEAR: 'near',
+  APT: 'aptos',
 };
 
 module.exports = { API_CONFIG, COINGECKO_IDS, BINANCE_EUR_SYMBOLS };

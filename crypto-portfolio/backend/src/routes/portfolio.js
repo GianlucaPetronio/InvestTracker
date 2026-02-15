@@ -16,24 +16,24 @@ const {
 // ---------------------------------------------------------------------------
 // GET /api/portfolio/stats - Statistiques globales (cartes du dashboard)
 // ---------------------------------------------------------------------------
-router.get('/stats', async (_req, res) => {
+router.get('/stats', async (req, res) => {
   try {
-    const stats = await calculateGlobalStats();
+    const stats = await calculateGlobalStats(req.user.id);
     res.json(stats);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Erreur interne du serveur' });
   }
 });
 
 // ---------------------------------------------------------------------------
 // GET /api/portfolio/assets - Liste détaillée des actifs avec métriques
 // ---------------------------------------------------------------------------
-router.get('/assets', async (_req, res) => {
+router.get('/assets', async (req, res) => {
   try {
-    const assets = await calculateAssetBreakdown();
+    const assets = await calculateAssetBreakdown(req.user.id);
     res.json(assets);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Erreur interne du serveur' });
   }
 });
 
@@ -52,22 +52,22 @@ router.get('/history', async (req, res) => {
       });
     }
 
-    const history = await calculatePortfolioHistory(period);
+    const history = await calculatePortfolioHistory(req.user.id, period);
     res.json(history);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Erreur interne du serveur' });
   }
 });
 
 // ---------------------------------------------------------------------------
 // GET /api/portfolio/allocation - Répartition pour le pie chart
 // ---------------------------------------------------------------------------
-router.get('/allocation', async (_req, res) => {
+router.get('/allocation', async (req, res) => {
   try {
-    const allocation = await calculateAllocation();
+    const allocation = await calculateAllocation(req.user.id);
     res.json(allocation);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Erreur interne du serveur' });
   }
 });
 
@@ -77,10 +77,10 @@ router.get('/allocation', async (_req, res) => {
 router.get('/recent-transactions', async (req, res) => {
   try {
     const limit = Math.min(parseInt(req.query.limit, 10) || 5, 50);
-    const transactions = await getRecentTransactions(limit);
+    const transactions = await getRecentTransactions(req.user.id, limit);
     res.json(transactions);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Erreur interne du serveur' });
   }
 });
 
@@ -98,10 +98,10 @@ router.get('/assets-history', async (req, res) => {
       });
     }
 
-    const history = await calculateAssetHistory(period);
+    const history = await calculateAssetHistory(req.user.id, period);
     res.json(history);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Erreur interne du serveur' });
   }
 });
 

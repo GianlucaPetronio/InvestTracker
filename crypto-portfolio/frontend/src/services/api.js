@@ -12,33 +12,48 @@ const api = axios.create({
   headers: { 'Content-Type': 'application/json' },
 });
 
-// Intercepteurs de debug (requetes et reponses)
-api.interceptors.request.use(
-  config => {
-    console.log(`[API] ${config.method.toUpperCase()} ${config.baseURL}${config.url}`, config.data || '');
-    return config;
-  },
+// Intercepteur : injecter le token JWT
+api.interceptors.request.use(config => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  if (import.meta.env.DEV) {
+    console.log(`[API] ${config.method.toUpperCase()} ${config.baseURL}${config.url}`);
+  }
+  return config;
+}, error => {
+  return Promise.reject(error);
+});
+
+// Intercepteur : gerer les 401 (token expire/invalide)
+api.interceptors.response.use(
+  response => response,
   error => {
-    console.error('[API] Request error:', error);
+    if (error.response?.status === 401) {
+      localStorage.removeItem('token');
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login';
+      }
+    }
+    if (import.meta.env.DEV) {
+      console.error('[API] Error:', error.response?.status, error.config?.url);
+    }
     return Promise.reject(error);
   }
 );
 
-api.interceptors.response.use(
-  response => {
-    console.log(`[API] ${response.status} ${response.config.url}`, response.data);
-    return response;
-  },
-  error => {
-    console.error('[API] Error:', {
-      url: error.config?.url,
-      status: error.response?.status,
-      data: error.response?.data,
-      message: error.message,
-    });
-    return Promise.reject(error);
-  }
-);
+// ---------------------------------------------------------------------------
+// Authentification
+// ---------------------------------------------------------------------------
+export const loginUser = (email, password) =>
+  api.post('/auth/login', { email, password });
+
+export const registerUser = (email, password, name) =>
+  api.post('/auth/register', { email, password, name });
+
+export const getCurrentUser = () =>
+  api.get('/auth/me');
 
 // ---------------------------------------------------------------------------
 // Transactions
@@ -57,6 +72,9 @@ export const updateTransaction = (id, data) =>
 
 export const deleteTransaction = (id) =>
   api.delete(`/transactions/${id}`);
+
+export const deleteTransactionsBulk = (ids) =>
+  api.delete('/transactions/bulk', { data: { ids } });
 
 // ---------------------------------------------------------------------------
 // Assets
