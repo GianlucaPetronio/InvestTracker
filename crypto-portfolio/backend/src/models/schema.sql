@@ -88,7 +88,7 @@ CREATE TABLE blockchains (
 CREATE INDEX idx_blockchains_symbol ON blockchains(symbol);
 CREATE INDEX idx_blockchains_active ON blockchains(is_active);
 
--- Blockchains par défaut
+-- Blockchains par défaut (top 10 par market cap)
 INSERT INTO blockchains (symbol, name, icon, hash_pattern, address_pattern, needs_recipient_address, asset_symbol, api_type, api_url, api_key_env_var, is_active, is_custom)
 VALUES
   ('BTC',   'Bitcoin',          '₿', '^[a-fA-F0-9]{64}$',
@@ -97,39 +97,30 @@ VALUES
   ('ETH',   'Ethereum',         '⟠', '^0x[a-fA-F0-9]{64}$',
     '^0x[a-fA-F0-9]{40}$',
     false, 'ETH',  'etherscan',   'https://api.etherscan.io/api',                 'ETHERSCAN_API_KEY',   true, false),
+  ('XRP',   'XRP Ledger',       '✕', '^[A-F0-9]{64}$',
+    '^r[1-9A-HJ-NP-Za-km-z]{24,34}$',
+    false, 'XRP',  'unsupported', NULL,                                           NULL,                  true, false),
+  ('SOL',   'Solana',           '◎', '^[1-9A-HJ-NP-Za-km-z]{87,88}$',
+    '^[1-9A-HJ-NP-Za-km-z]{32,44}$',
+    true,  'SOL',  'solana',      'https://api.mainnet-beta.solana.com',           NULL,                  true, false),
   ('BSC',   'BNB Smart Chain',  '◇', '^0x[a-fA-F0-9]{64}$',
     '^0x[a-fA-F0-9]{40}$',
     false, 'BNB',  'etherscan',   'https://api.bscscan.com/api',                  'BSCSCAN_API_KEY',     true, false),
-  ('MATIC', 'Polygon',          '⬡', '^0x[a-fA-F0-9]{64}$',
-    '^0x[a-fA-F0-9]{40}$',
-    false, 'MATIC','etherscan',   'https://api.polygonscan.com/api',               'POLYGONSCAN_API_KEY', true, false),
-  ('SOL',   'Solana',           '◎', '^[1-9A-HJ-NP-Za-km-z]{87,88}$',
-    '^[1-9A-HJ-NP-Za-km-z]{32,44}$',
-    true,  'SOL',  'solana',      'https://api.mainnet-beta.solana.com',            NULL,                  true, false),
+  ('ADA',   'Cardano',          '♁', '^[a-fA-F0-9]{64}$',
+    '^addr1[a-z0-9]{50,100}$',
+    false, 'ADA',  'unsupported', NULL,                                           NULL,                  true, false),
+  ('TRX',   'Tron',             '◈', '^[a-fA-F0-9]{64}$',
+    '^T[a-zA-Z0-9]{33}$',
+    false, 'TRX',  'unsupported', NULL,                                           NULL,                  true, false),
   ('AVAX',  'Avalanche',        '▲', '^0x[a-fA-F0-9]{64}$',
     '^0x[a-fA-F0-9]{40}$',
     false, 'AVAX', 'etherscan',   'https://api.snowtrace.io/api',                 'SNOWTRACE_API_KEY',   true, false),
-  ('ARB',   'Arbitrum',         '●', '^0x[a-fA-F0-9]{64}$',
+  ('DOT',   'Polkadot',         '●', '^0x[a-fA-F0-9]{64}$',
+    '^1[a-zA-Z0-9]{30,50}$',
+    false, 'DOT',  'unsupported', NULL,                                           NULL,                  true, false),
+  ('MATIC', 'Polygon',          '⬡', '^0x[a-fA-F0-9]{64}$',
     '^0x[a-fA-F0-9]{40}$',
-    false, 'ETH',  'etherscan',   'https://api.arbiscan.io/api',                  'ARBISCAN_API_KEY',    true, false),
-  ('OP',    'Optimism',         '○', '^0x[a-fA-F0-9]{64}$',
-    '^0x[a-fA-F0-9]{40}$',
-    false, 'ETH',  'etherscan',   'https://api-optimistic.etherscan.io/api',      'OPTIMISM_API_KEY',    true, false),
-  ('BASE',  'Base',             '△', '^0x[a-fA-F0-9]{64}$',
-    '^0x[a-fA-F0-9]{40}$',
-    false, 'ETH',  'etherscan',   'https://api.basescan.org/api',                  'BASESCAN_API_KEY',    true, false),
-  ('FTM',   'Fantom',           '◆', '^0x[a-fA-F0-9]{64}$',
-    '^0x[a-fA-F0-9]{40}$',
-    false, 'FTM',  'etherscan',   'https://api.ftmscan.com/api',                   'FTMSCAN_API_KEY',     true, false),
-  ('CRO',   'Cronos',           '◈', '^0x[a-fA-F0-9]{64}$',
-    '^0x[a-fA-F0-9]{40}$',
-    false, 'CRO',  'etherscan',   'https://api.cronoscan.com/api',                 'CRONOSCAN_API_KEY',   true, false),
-  ('LINEA', 'Linea',            '■', '^0x[a-fA-F0-9]{64}$',
-    '^0x[a-fA-F0-9]{40}$',
-    false, 'ETH',  'etherscan',   'https://api.lineascan.build/api',               'LINEASCAN_API_KEY',   true, false),
-  ('ZKSYNC','zkSync Era',       '◊', '^0x[a-fA-F0-9]{64}$',
-    '^0x[a-fA-F0-9]{40}$',
-    false, 'ETH',  'etherscan',   'https://api-era.zksync.network/api',            'ZKSYNC_API_KEY',      true, false)
+    false, 'MATIC','etherscan',   'https://api.polygonscan.com/api',               'POLYGONSCAN_API_KEY', true, false)
 ON CONFLICT (symbol) DO NOTHING;
 
 -- =============================================================================

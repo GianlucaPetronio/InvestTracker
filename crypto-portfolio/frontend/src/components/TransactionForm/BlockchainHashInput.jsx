@@ -6,29 +6,45 @@ import { formatQuantity } from '../../utils/calculations';
 const LOGO_SYMBOL_MAP = {
   BTC: 'btc',
   ETH: 'eth',
-  BSC: 'bnb',
-  MATIC: 'matic',
+  XRP: 'xrp',
   SOL: 'sol',
-  AVAX: 'avax',
-  ARB: 'arb',
-  OP: 'op',
-  DOT: 'dot',
+  BSC: 'bnb',
   ADA: 'ada',
-  LINK: 'link',
+  TRX: 'trx',
+  AVAX: 'avax',
+  DOT: 'dot',
+  MATIC: 'matic',
 };
 
 function getLogoUrl(symbol) {
   const s = LOGO_SYMBOL_MAP[symbol] || symbol.toLowerCase();
-  return `https://cdn.jsdelivr.net/gh/spothq/cryptocurrency-icons@master/svg/color/${s}.svg`;
+  return `https://assets.coincap.io/assets/icons/${s}@2x.png`;
+}
+
+// Ordre d'affichage par market cap
+const MARKET_CAP_ORDER = ['BTC', 'ETH', 'XRP', 'SOL', 'BSC', 'ADA', 'TRX', 'AVAX', 'DOT', 'MATIC'];
+
+function sortByMarketCap(blockchains) {
+  return [...blockchains].sort((a, b) => {
+    const ia = MARKET_CAP_ORDER.indexOf(a.symbol);
+    const ib = MARKET_CAP_ORDER.indexOf(b.symbol);
+    // Blockchains connues d'abord (par market cap), puis les custom a la fin
+    return (ia === -1 ? 999 : ia) - (ib === -1 ? 999 : ib);
+  });
 }
 
 // Blockchains par defaut (toujours affichees, meme sans connexion DB)
 const DEFAULT_BLOCKCHAINS = [
   { symbol: 'BTC', name: 'Bitcoin', icon: '\u20bf', needs_recipient_address: true, hash_pattern: '^[a-fA-F0-9]{64}$' },
   { symbol: 'ETH', name: 'Ethereum', icon: '\u27e0', needs_recipient_address: false, hash_pattern: '^0x[a-fA-F0-9]{64}$' },
-  { symbol: 'BSC', name: 'BNB Smart Chain', icon: '\u25c7', needs_recipient_address: false, hash_pattern: '^0x[a-fA-F0-9]{64}$' },
-  { symbol: 'MATIC', name: 'Polygon', icon: '\u2b21', needs_recipient_address: false, hash_pattern: '^0x[a-fA-F0-9]{64}$' },
+  { symbol: 'XRP', name: 'XRP Ledger', icon: '\u2715', needs_recipient_address: false, hash_pattern: '^[A-F0-9]{64}$' },
   { symbol: 'SOL', name: 'Solana', icon: '\u25ce', needs_recipient_address: true, hash_pattern: '^[1-9A-HJ-NP-Za-km-z]{87,88}$' },
+  { symbol: 'BSC', name: 'BNB Smart Chain', icon: '\u25c7', needs_recipient_address: false, hash_pattern: '^0x[a-fA-F0-9]{64}$' },
+  { symbol: 'ADA', name: 'Cardano', icon: '\u2641', needs_recipient_address: false, hash_pattern: '^[a-fA-F0-9]{64}$' },
+  { symbol: 'TRX', name: 'Tron', icon: '\u25c8', needs_recipient_address: false, hash_pattern: '^[a-fA-F0-9]{64}$' },
+  { symbol: 'AVAX', name: 'Avalanche', icon: '\u25b2', needs_recipient_address: false, hash_pattern: '^0x[a-fA-F0-9]{64}$' },
+  { symbol: 'DOT', name: 'Polkadot', icon: '\u25cf', needs_recipient_address: false, hash_pattern: '^0x[a-fA-F0-9]{64}$' },
+  { symbol: 'MATIC', name: 'Polygon', icon: '\u2b21', needs_recipient_address: false, hash_pattern: '^0x[a-fA-F0-9]{64}$' },
 ];
 
 export default function BlockchainHashInput({ onValidate, loading, onShowLedgerGuide }) {
@@ -55,7 +71,7 @@ export default function BlockchainHashInput({ onValidate, loading, onShowLedgerG
           // Fusionner : prendre les blockchains API, puis ajouter les defauts manquants
           const apiSymbols = new Set(fromApi.map(b => b.symbol));
           const missing = DEFAULT_BLOCKCHAINS.filter(b => !apiSymbols.has(b.symbol));
-          setAvailableBlockchains([...fromApi, ...missing]);
+          setAvailableBlockchains(sortByMarketCap([...fromApi, ...missing]));
         }
       } catch {
         // Fallback silencieux : on garde les blockchains par defaut
@@ -169,8 +185,8 @@ export default function BlockchainHashInput({ onValidate, loading, onShowLedgerG
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Blockchain {autoDetecting && <span className="text-indigo-500 ml-1">(detection auto...)</span>}
         </label>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-          {(showAllBlockchains ? availableBlockchains : availableBlockchains.slice(0, 6)).map((bc) => (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+          {(showAllBlockchains ? availableBlockchains : availableBlockchains.slice(0, 10)).map((bc) => (
             <button
               key={bc.symbol}
               type="button"
@@ -211,7 +227,7 @@ export default function BlockchainHashInput({ onValidate, loading, onShowLedgerG
             </button>
           ))}
         </div>
-        {availableBlockchains.length > 6 && (
+        {availableBlockchains.length > 10 && (
           <button
             type="button"
             onClick={() => setShowAllBlockchains(!showAllBlockchains)}
@@ -220,7 +236,7 @@ export default function BlockchainHashInput({ onValidate, loading, onShowLedgerG
           >
             {showAllBlockchains
               ? 'Voir moins'
-              : `Voir plus (${availableBlockchains.length - 6} autres)`
+              : `Voir plus (${availableBlockchains.length - 10} autres)`
             }
           </button>
         )}

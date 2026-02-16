@@ -19,7 +19,9 @@
       "Bash(findstr:*)",
       "Bash(docker cp:*)",
       "Bash(docker exec:*)",
-      "Bash(if not exist \"Q:\\\\Gianluca_Perso\\\\InvestTracker\\\\crypto-portfolio\\\\backend\\\\src\\\\middleware\" mkdir \"Q:\\\\Gianluca_Perso\\\\InvestTracker\\\\crypto-portfolio\\\\backend\\\\src\\\\middleware\")"
+      "Bash(if not exist \"Q:\\\\Gianluca_Perso\\\\InvestTracker\\\\crypto-portfolio\\\\backend\\\\src\\\\middleware\" mkdir \"Q:\\\\Gianluca_Perso\\\\InvestTracker\\\\crypto-portfolio\\\\backend\\\\src\\\\middleware\")",
+      "Bash(ls -la \"Q:\\\\Gianluca_Perso\\\\InvestTracker\\\\crypto-portfolio\\\\backend\\\\src\\\\models\"\" | grep -E \"migration)",
+      "Bash(schema \")"
     ]
   }
 }

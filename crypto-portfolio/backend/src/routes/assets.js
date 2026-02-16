@@ -35,6 +35,29 @@ router.get('/', async (req, res) => {
 });
 
 // ---------------------------------------------------------------------------
+// GET /api/assets/prices/current - Prix actuels de tous les actifs crypto
+// (doit etre AVANT /:symbol sinon "prices" est capte comme un :symbol)
+// ---------------------------------------------------------------------------
+router.get('/prices/current', async (req, res) => {
+  try {
+    const result = await query(
+      `SELECT DISTINCT asset_symbol FROM transactions WHERE asset_type = 'crypto' AND user_id = $1`,
+      [req.user.id]
+    );
+
+    const symbols = result.rows.map(r => r.asset_symbol);
+    if (symbols.length === 0) {
+      return res.json({});
+    }
+
+    const prices = await getMultiplePrices(symbols);
+    res.json(prices);
+  } catch (error) {
+    res.status(500).json({ error: 'Erreur interne du serveur' });
+  }
+});
+
+// ---------------------------------------------------------------------------
 // GET /api/assets/:symbol - Détail d'un actif avec prix actuel
 // ---------------------------------------------------------------------------
 router.get('/:symbol', async (req, res) => {
@@ -81,28 +104,6 @@ router.get('/:symbol', async (req, res) => {
       pnl: currentPrice ? (totalQuantity * currentPrice) - totalInvested : null,
       transactions: txResult.rows,
     });
-  } catch (error) {
-    res.status(500).json({ error: 'Erreur interne du serveur' });
-  }
-});
-
-// ---------------------------------------------------------------------------
-// GET /api/assets/prices/current - Prix actuels de tous les actifs crypto
-// ---------------------------------------------------------------------------
-router.get('/prices/current', async (req, res) => {
-  try {
-    const result = await query(
-      `SELECT DISTINCT asset_symbol FROM transactions WHERE asset_type = 'crypto' AND user_id = $1`,
-      [req.user.id]
-    );
-
-    const symbols = result.rows.map(r => r.asset_symbol);
-    if (symbols.length === 0) {
-      return res.json({});
-    }
-
-    const prices = await getMultiplePrices(symbols);
-    res.json(prices);
   } catch (error) {
     res.status(500).json({ error: 'Erreur interne du serveur' });
   }

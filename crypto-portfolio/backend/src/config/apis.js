@@ -67,6 +67,7 @@ const BINANCE_EUR_SYMBOLS = {
   LTC: 'LTCEUR',
   NEAR: 'NEAREUR',
   APT: 'APTEUR',
+  TRX: 'TRXEUR',
 };
 
 // CoinGecko : mapping symbole -> id CoinGecko
@@ -90,6 +91,7 @@ const COINGECKO_IDS = {
   LTC: 'litecoin',
   NEAR: 'near',
   APT: 'aptos',
+  TRX: 'tron',
 };
 
 module.exports = { API_CONFIG, COINGECKO_IDS, BINANCE_EUR_SYMBOLS };

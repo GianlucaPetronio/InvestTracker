@@ -34,20 +34,20 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-// Rate limiting global
+// Rate limiting global (relache en dev)
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 200,
+  windowMs: 15 * 60 * 1000,
+  max: IS_PRODUCTION ? 200 : 1000,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'Trop de requetes, veuillez reessayer plus tard' },
 });
 app.use('/api/', limiter);
 
-// Rate limiting strict pour les ecritures
+// Rate limiting strict pour les ecritures (relache en dev)
 const writeLimiter = rateLimit({
-  windowMs: 1 * 60 * 1000, // 1 minute
-  max: 30,
+  windowMs: 1 * 60 * 1000,
+  max: IS_PRODUCTION ? 30 : 200,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'Trop de requetes, veuillez reessayer plus tard' },
@@ -69,8 +69,8 @@ if (!IS_PRODUCTION) {
 // Rate limiting strict pour l'authentification
 // ---------------------------------------------------------------------------
 const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 20,
+  windowMs: 15 * 60 * 1000,
+  max: IS_PRODUCTION ? 20 : 100,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'Trop de tentatives, veuillez reessayer plus tard' },

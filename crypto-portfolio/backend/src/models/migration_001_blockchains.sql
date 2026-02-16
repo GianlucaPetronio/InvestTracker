@@ -62,48 +62,36 @@ VALUES
     '^0x[a-fA-F0-9]{40}$',
     false, 'ETH',  'etherscan',   'https://api.etherscan.io/api',                 'ETHERSCAN_API_KEY',   true, false),
 
+  ('XRP',   'XRP Ledger',       E'\u2715', '^[A-F0-9]{64}$',
+    '^r[1-9A-HJ-NP-Za-km-z]{24,34}$',
+    false, 'XRP',  'unsupported', NULL,                                           NULL,                  true, false),
+
+  ('SOL',   'Solana',           E'\u25CE', '^[1-9A-HJ-NP-Za-km-z]{87,88}$',
+    '^[1-9A-HJ-NP-Za-km-z]{32,44}$',
+    true,  'SOL',  'solana',      'https://api.mainnet-beta.solana.com',           NULL,                  true, false),
+
   ('BSC',   'BNB Smart Chain',  E'\u25C7', '^0x[a-fA-F0-9]{64}$',
     '^0x[a-fA-F0-9]{40}$',
     false, 'BNB',  'etherscan',   'https://api.bscscan.com/api',                  'BSCSCAN_API_KEY',     true, false),
 
-  ('MATIC', 'Polygon',          E'\u2B21', '^0x[a-fA-F0-9]{64}$',
-    '^0x[a-fA-F0-9]{40}$',
-    false, 'MATIC','etherscan',   'https://api.polygonscan.com/api',               'POLYGONSCAN_API_KEY', true, false),
+  ('ADA',   'Cardano',          E'\u2641', '^[a-fA-F0-9]{64}$',
+    '^addr1[a-z0-9]{50,100}$',
+    false, 'ADA',  'unsupported', NULL,                                           NULL,                  true, false),
 
-  ('SOL',   'Solana',           E'\u25CE', '^[1-9A-HJ-NP-Za-km-z]{87,88}$',
-    '^[1-9A-HJ-NP-Za-km-z]{32,44}$',
-    true,  'SOL',  'solana',      'https://api.mainnet-beta.solana.com',            NULL,                  true, false),
+  ('TRX',   'Tron',             E'\u25C8', '^[a-fA-F0-9]{64}$',
+    '^T[a-zA-Z0-9]{33}$',
+    false, 'TRX',  'unsupported', NULL,                                           NULL,                  true, false),
 
   ('AVAX',  'Avalanche',        E'\u25B2', '^0x[a-fA-F0-9]{64}$',
     '^0x[a-fA-F0-9]{40}$',
     false, 'AVAX', 'etherscan',   'https://api.snowtrace.io/api',                 'SNOWTRACE_API_KEY',   true, false),
 
-  ('ARB',   'Arbitrum',         E'\u25CF', '^0x[a-fA-F0-9]{64}$',
-    '^0x[a-fA-F0-9]{40}$',
-    false, 'ETH',  'etherscan',   'https://api.arbiscan.io/api',                  'ARBISCAN_API_KEY',    true, false),
+  ('DOT',   'Polkadot',         E'\u25CF', '^0x[a-fA-F0-9]{64}$',
+    '^1[a-zA-Z0-9]{30,50}$',
+    false, 'DOT',  'unsupported', NULL,                                           NULL,                  true, false),
 
-  ('OP',    'Optimism',         E'\u25CB', '^0x[a-fA-F0-9]{64}$',
+  ('MATIC', 'Polygon',          E'\u2B21', '^0x[a-fA-F0-9]{64}$',
     '^0x[a-fA-F0-9]{40}$',
-    false, 'ETH',  'etherscan',   'https://api-optimistic.etherscan.io/api',      'OPTIMISM_API_KEY',    true, false),
-
-  ('BASE',  'Base',             E'\u25B3', '^0x[a-fA-F0-9]{64}$',
-    '^0x[a-fA-F0-9]{40}$',
-    false, 'ETH',  'etherscan',   'https://api.basescan.org/api',                  'BASESCAN_API_KEY',    true, false),
-
-  ('FTM',   'Fantom',           E'\u25C6', '^0x[a-fA-F0-9]{64}$',
-    '^0x[a-fA-F0-9]{40}$',
-    false, 'FTM',  'etherscan',   'https://api.ftmscan.com/api',                   'FTMSCAN_API_KEY',     true, false),
-
-  ('CRO',   'Cronos',           E'\u25C8', '^0x[a-fA-F0-9]{64}$',
-    '^0x[a-fA-F0-9]{40}$',
-    false, 'CRO',  'etherscan',   'https://api.cronoscan.com/api',                 'CRONOSCAN_API_KEY',   true, false),
-
-  ('LINEA', 'Linea',            E'\u25A0', '^0x[a-fA-F0-9]{64}$',
-    '^0x[a-fA-F0-9]{40}$',
-    false, 'ETH',  'etherscan',   'https://api.lineascan.build/api',               'LINEASCAN_API_KEY',   true, false),
-
-  ('ZKSYNC','zkSync Era',       E'\u25CA', '^0x[a-fA-F0-9]{64}$',
-    '^0x[a-fA-F0-9]{40}$',
-    false, 'ETH',  'etherscan',   'https://api-era.zksync.network/api',            'ZKSYNC_API_KEY',      true, false)
+    false, 'MATIC','etherscan',   'https://api.polygonscan.com/api',               'POLYGONSCAN_API_KEY', true, false)
 
 ON CONFLICT (symbol) DO NOTHING;

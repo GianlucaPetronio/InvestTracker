@@ -7,6 +7,7 @@ import AssetEvolutionChart from './AssetEvolutionChart';
 import AssetsTable from './AssetsTable';
 import AllocationPieChart from './AllocationPieChart';
 import RecentTransactions from './RecentTransactions';
+import PriceTicker from './PriceTicker';
 
 function Dashboard() {
   const location = useLocation();
@@ -132,6 +133,9 @@ function Dashboard() {
           Ajouter
         </Link>
       </div>
+
+      {/* Bandeau defilant des prix */}
+      <PriceTicker />
 
       {/* Cartes statistiques */}
       <StatsCards stats={stats} />

@@ -7,12 +7,12 @@ const LOGO_SYMBOL_MAP = {
   ADA: 'ada', DOT: 'dot', AVAX: 'avax', MATIC: 'matic',
   LINK: 'link', UNI: 'uni', DOGE: 'doge', XRP: 'xrp',
   LTC: 'ltc', ATOM: 'atom', NEAR: 'near', APT: 'apt',
-  ARB: 'arb', OP: 'op', FTM: 'ftm', ALGO: 'algo',
+  ARB: 'arb', OP: 'op', FTM: 'ftm', ALGO: 'algo', TRX: 'trx',
 };
 
 function getLogoUrl(symbol) {
   const s = LOGO_SYMBOL_MAP[symbol] || symbol.toLowerCase();
-  return `https://cdn.jsdelivr.net/gh/spothq/cryptocurrency-icons@master/svg/color/${s}.svg`;
+  return `https://assets.coincap.io/assets/icons/${s}@2x.png`;
 }
 
 function AssetsTable({ assets = [] }) {

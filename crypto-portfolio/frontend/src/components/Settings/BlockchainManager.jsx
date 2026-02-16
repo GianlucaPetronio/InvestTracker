@@ -1,6 +1,16 @@
 import { useState, useEffect } from 'react';
 import { getBlockchains, createBlockchain, updateBlockchain, deleteBlockchain, toggleBlockchain } from '../../services/api';
 
+const LOGO_SYMBOL_MAP = {
+  BTC: 'btc', ETH: 'eth', XRP: 'xrp', SOL: 'sol', BSC: 'bnb',
+  ADA: 'ada', TRX: 'trx', AVAX: 'avax', DOT: 'dot', MATIC: 'matic',
+};
+
+function getLogoUrl(symbol) {
+  const s = LOGO_SYMBOL_MAP[symbol] || symbol.toLowerCase();
+  return `https://assets.coincap.io/assets/icons/${s}@2x.png`;
+}
+
 export default function BlockchainManager() {
   const [blockchains, setBlockchains] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -84,7 +94,16 @@ export default function BlockchainManager() {
             {/* Header */}
             <div className="flex items-start justify-between mb-3">
               <div className="flex items-center gap-3">
-                <span className="text-3xl">{bc.icon}</span>
+                <img
+                  src={getLogoUrl(bc.symbol)}
+                  alt={bc.symbol}
+                  className="w-9 h-9"
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    e.target.nextSibling.style.display = '';
+                  }}
+                />
+                <span className="text-3xl" style={{ display: 'none' }}>{bc.icon}</span>
                 <div>
                   <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">
                     {bc.symbol}
