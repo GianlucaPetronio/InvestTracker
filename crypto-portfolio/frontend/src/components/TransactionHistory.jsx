@@ -10,13 +10,29 @@ function TransactionHistory() {
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all'); // 'all', 'crypto', 'traditional'
+  const [assetFilter, setAssetFilter] = useState('all');
+  const [availableAssets, setAvailableAssets] = useState([]);
   const [editingTx, setEditingTx] = useState(null);
   const [selected, setSelected] = useState(new Set());
   const [deleting, setDeleting] = useState(false);
 
+  // Fetch all transactions once on mount to build the available assets list
+  useEffect(() => {
+    async function fetchAllAssets() {
+      try {
+        const response = await getTransactions({});
+        const symbols = [...new Set(response.data.map(tx => tx.asset_symbol))].sort();
+        setAvailableAssets(symbols);
+      } catch {
+        // ignore
+      }
+    }
+    fetchAllAssets();
+  }, []);
+
   useEffect(() => {
     fetchTransactions();
-  }, [filter]);
+  }, [filter, assetFilter]);
 
   // Vider la selection quand les transactions changent
   useEffect(() => {
@@ -28,6 +44,7 @@ function TransactionHistory() {
     try {
       const params = {};
       if (filter !== 'all') params.asset_type = filter;
+      if (assetFilter !== 'all') params.asset_symbol = assetFilter;
       const response = await getTransactions(params);
       setTransactions(response.data);
     } catch {
@@ -93,20 +110,32 @@ function TransactionHistory() {
         <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Historique des transactions</h1>
 
         {/* Filtres */}
-        <div className="flex space-x-2">
-          {['all', 'crypto', 'traditional'].map((f) => (
-            <button
-              key={f}
-              onClick={() => setFilter(f)}
-              className={`px-3 py-1 rounded-full text-sm transition-colors ${
-                filter === f
-                  ? 'bg-indigo-600 text-white'
-                  : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-              }`}
-            >
-              {f === 'all' ? 'Tout' : f === 'crypto' ? 'Crypto' : 'Traditionnel'}
-            </button>
-          ))}
+        <div className="flex items-center space-x-3">
+          <div className="flex space-x-2">
+            {['all', 'crypto', 'traditional'].map((f) => (
+              <button
+                key={f}
+                onClick={() => setFilter(f)}
+                className={`px-3 py-1 rounded-full text-sm transition-colors ${
+                  filter === f
+                    ? 'bg-indigo-600 text-white'
+                    : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                }`}
+              >
+                {f === 'all' ? 'Tout' : f === 'crypto' ? 'Crypto' : 'Traditionnel'}
+              </button>
+            ))}
+          </div>
+          <select
+            value={assetFilter}
+            onChange={(e) => setAssetFilter(e.target.value)}
+            className="px-3 py-1 rounded-lg text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          >
+            <option value="all">Tous les actifs</option>
+            {availableAssets.map((symbol) => (
+              <option key={symbol} value={symbol}>{symbol}</option>
+            ))}
+          </select>
         </div>
       </div>
 
