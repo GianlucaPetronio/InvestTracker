@@ -28,6 +28,9 @@ CREATE TABLE transactions (
     quantity_purchased DECIMAL(20, 8) NOT NULL,  -- Quantité achetée
     transaction_fees DECIMAL(20, 8) DEFAULT 0,   -- Frais de transaction
 
+    -- Type de transaction
+    transaction_type VARCHAR(10) DEFAULT 'buy',  -- 'buy' ou 'sell'
+
     -- Métadonnées
     source VARCHAR(20) NOT NULL,                 -- 'blockchain' ou 'manual'
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -65,6 +68,10 @@ CREATE INDEX idx_price_cache_timestamp ON price_cache(timestamp);
 --   'bitcoin'     -> getBitcoinTxDetails (Blockchain.info API)
 --   'etherscan'   -> getEtherscanLikeTxDetails (générique pour toutes les EVM chains)
 --   'solana'      -> getSolanaTxDetails (Solana JSON-RPC API)
+--   'xrp'         -> getXrpTxDetails (XRPL JSON-RPC)
+--   'tron'        -> getTrxTxDetails (TronGrid REST API)
+--   'cardano'     -> getAdaTxDetails (Koios REST API)
+--   'subscan'     -> getDotTxDetails (Subscan REST API)
 --   'unsupported' -> pas de récupération automatique (erreur explicite)
 
 CREATE TABLE blockchains (
@@ -99,7 +106,7 @@ VALUES
     false, 'ETH',  'etherscan',   'https://api.etherscan.io/api',                 'ETHERSCAN_API_KEY',   true, false),
   ('XRP',   'XRP Ledger',       '✕', '^[A-F0-9]{64}$',
     '^r[1-9A-HJ-NP-Za-km-z]{24,34}$',
-    false, 'XRP',  'unsupported', NULL,                                           NULL,                  true, false),
+    false, 'XRP',  'xrp',         'https://s1.ripple.com:51234/',                 NULL,                  true, false),
   ('SOL',   'Solana',           '◎', '^[1-9A-HJ-NP-Za-km-z]{87,88}$',
     '^[1-9A-HJ-NP-Za-km-z]{32,44}$',
     true,  'SOL',  'solana',      'https://api.mainnet-beta.solana.com',           NULL,                  true, false),
@@ -108,16 +115,16 @@ VALUES
     false, 'BNB',  'etherscan',   'https://api.bscscan.com/api',                  'BSCSCAN_API_KEY',     true, false),
   ('ADA',   'Cardano',          '♁', '^[a-fA-F0-9]{64}$',
     '^addr1[a-z0-9]{50,100}$',
-    false, 'ADA',  'unsupported', NULL,                                           NULL,                  true, false),
+    true,  'ADA',  'cardano',     'https://api.koios.rest/api/v1',                NULL,                  true, false),
   ('TRX',   'Tron',             '◈', '^[a-fA-F0-9]{64}$',
     '^T[a-zA-Z0-9]{33}$',
-    false, 'TRX',  'unsupported', NULL,                                           NULL,                  true, false),
+    false, 'TRX',  'tron',        'https://api.trongrid.io',                      NULL,                  true, false),
   ('AVAX',  'Avalanche',        '▲', '^0x[a-fA-F0-9]{64}$',
     '^0x[a-fA-F0-9]{40}$',
     false, 'AVAX', 'etherscan',   'https://api.snowtrace.io/api',                 'SNOWTRACE_API_KEY',   true, false),
   ('DOT',   'Polkadot',         '●', '^0x[a-fA-F0-9]{64}$',
     '^1[a-zA-Z0-9]{30,50}$',
-    false, 'DOT',  'unsupported', NULL,                                           NULL,                  true, false),
+    false, 'DOT',  'subscan',     'https://polkadot.api.subscan.io',              'SUBSCAN_API_KEY',     true, false),
   ('MATIC', 'Polygon',          '⬡', '^0x[a-fA-F0-9]{64}$',
     '^0x[a-fA-F0-9]{40}$',
     false, 'MATIC','etherscan',   'https://api.polygonscan.com/api',               'POLYGONSCAN_API_KEY', true, false)

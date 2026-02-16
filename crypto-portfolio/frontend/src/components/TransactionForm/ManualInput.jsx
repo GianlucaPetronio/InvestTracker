@@ -1,6 +1,7 @@
 import { useState } from 'react';
 
-export default function ManualInput({ onSubmit, initialData }) {
+export default function ManualInput({ onSubmit, initialData, transactionType = 'buy' }) {
+  const isSell = transactionType === 'sell';
   const [assetSymbol, setAssetSymbol] = useState(initialData.assetSymbol || '');
   const [assetName, setAssetName] = useState(initialData.assetName || '');
   const [assetType, setAssetType] = useState('crypto');
@@ -52,8 +53,13 @@ export default function ManualInput({ onSubmit, initialData }) {
           Saisie manuelle
         </h2>
         <p className="text-gray-600 dark:text-gray-400">
-          Entrez les details de votre transaction
+          Entrez les details de votre {isSell ? 'vente' : 'achat'}
         </p>
+        {isSell && (
+          <span className="inline-block mt-2 px-3 py-1 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 text-sm font-semibold rounded-full">
+            Vente
+          </span>
+        )}
       </div>
 
       {/* Symbole + Nom */}
@@ -132,7 +138,7 @@ export default function ManualInput({ onSubmit, initialData }) {
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Prix unitaire (EUR) *
+            {isSell ? 'Prix de vente (EUR) *' : 'Prix unitaire (EUR) *'}
           </label>
           <input
             type="number"
@@ -154,7 +160,7 @@ export default function ManualInput({ onSubmit, initialData }) {
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Quantite *
+            {isSell ? 'Quantite vendue *' : 'Quantite *'}
           </label>
           <input
             type="number"
@@ -180,7 +186,7 @@ export default function ManualInput({ onSubmit, initialData }) {
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Montant total investi (EUR)
+            {isSell ? 'Montant total recupere (EUR)' : 'Montant total investi (EUR)'}
           </label>
           <input
             type="number"

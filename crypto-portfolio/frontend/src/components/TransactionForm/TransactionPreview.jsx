@@ -38,7 +38,8 @@ function formatDebugNumber(num) {
   return typeof num === 'number' ? num.toFixed(8) : String(num);
 }
 
-export default function TransactionPreview({ data, txDetails, onConfirm, onEdit, onDataChange, loading }) {
+export default function TransactionPreview({ data, txDetails, onConfirm, onEdit, onDataChange, loading, transactionType = 'buy' }) {
+  const isSell = transactionType === 'sell';
   const [showDebug, setShowDebug] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const [editMode, setEditMode] = useState(false);
@@ -118,9 +119,18 @@ export default function TransactionPreview({ data, txDetails, onConfirm, onEdit,
               {getCryptoIcon(data.assetSymbol)}
             </div>
             <div>
-              <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                {data.assetSymbol}
-              </h3>
+              <div className="flex items-center gap-2">
+                <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                  {data.assetSymbol}
+                </h3>
+                <span className={`px-2.5 py-0.5 text-xs font-bold rounded-full ${
+                  isSell
+                    ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
+                    : 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400'
+                }`}>
+                  {isSell ? 'Vente' : 'Achat'}
+                </span>
+              </div>
               <p className="text-gray-600 dark:text-gray-400">
                 {data.assetName || data.blockchain || data.assetSymbol}
               </p>
@@ -193,7 +203,7 @@ export default function TransactionPreview({ data, txDetails, onConfirm, onEdit,
               </div>
               <div className="flex-1">
                 <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                  Prix d'achat
+                  {isSell ? 'Prix de vente' : "Prix d'achat"}
                   {editMode && (
                     <span className="ml-2 text-xs text-amber-600 dark:text-amber-400 font-medium">
                       (modifiable)
@@ -256,7 +266,7 @@ export default function TransactionPreview({ data, txDetails, onConfirm, onEdit,
               </div>
               <div className="flex-1">
                 <p className="text-sm text-gray-700 dark:text-gray-300 mb-1 font-medium">
-                  Montant reellement paye (EUR)
+                  {isSell ? 'Montant reellement recu (EUR)' : 'Montant reellement paye (EUR)'}
                 </p>
                 <div className="relative">
                   <input
@@ -272,7 +282,9 @@ export default function TransactionPreview({ data, txDetails, onConfirm, onEdit,
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">EUR</span>
                 </div>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  Saisissez le montant exact que vous avez paye (virement, CB, etc.)
+                  {isSell
+                    ? 'Saisissez le montant exact que vous avez recu'
+                    : 'Saisissez le montant exact que vous avez paye (virement, CB, etc.)'}
                 </p>
                 {spread !== null && Math.abs(spread) > 0.01 && (
                   <p className={`text-xs mt-1 font-medium ${
@@ -438,7 +450,7 @@ export default function TransactionPreview({ data, txDetails, onConfirm, onEdit,
         </h4>
         <div className="space-y-3 text-sm">
           <div className="flex justify-between items-center">
-            <span className="text-gray-700 dark:text-gray-300 font-medium">Cout d'acquisition</span>
+            <span className="text-gray-700 dark:text-gray-300 font-medium">{isSell ? 'Montant recupere' : "Cout d'acquisition"}</span>
             <span className="font-bold text-green-700 dark:text-green-400 text-base">
               {formatCurrency(amountPaidNum)}
             </span>

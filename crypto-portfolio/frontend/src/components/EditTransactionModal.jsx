@@ -6,6 +6,7 @@ export default function EditTransactionModal({ transaction, onClose, onSaved }) 
     asset_symbol: '',
     asset_name: '',
     asset_type: 'crypto',
+    transaction_type: 'buy',
     transaction_date: '',
     price_at_purchase: '',
     quantity_purchased: '',
@@ -29,6 +30,7 @@ export default function EditTransactionModal({ transaction, onClose, onSaved }) 
       asset_symbol: transaction.asset_symbol || '',
       asset_name: transaction.asset_name || '',
       asset_type: transaction.asset_type || 'crypto',
+      transaction_type: transaction.transaction_type || 'buy',
       transaction_date: dateStr,
       price_at_purchase: transaction.price_at_purchase ?? '',
       quantity_purchased: transaction.quantity_purchased ?? '',
@@ -62,6 +64,7 @@ export default function EditTransactionModal({ transaction, onClose, onSaved }) 
         asset_symbol: form.asset_symbol.toUpperCase(),
         asset_name: form.asset_name || form.asset_symbol.toUpperCase(),
         asset_type: form.asset_type,
+        transaction_type: form.transaction_type,
         transaction_date: form.transaction_date,
         price_at_purchase: parseFloat(form.price_at_purchase) || 0,
         quantity_purchased: parseFloat(form.quantity_purchased) || 0,
@@ -129,10 +132,10 @@ export default function EditTransactionModal({ transaction, onClose, onSaved }) 
             </div>
           </div>
 
-          {/* Type + Date */}
+          {/* Type d'actif + Type de transaction */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Type</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Type d'actif</label>
               <select
                 value={form.asset_type}
                 onChange={e => handleChange('asset_type', e.target.value)}
@@ -143,14 +146,31 @@ export default function EditTransactionModal({ transaction, onClose, onSaved }) 
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Date</label>
-              <input
-                type="datetime-local"
-                value={form.transaction_date}
-                onChange={e => handleChange('transaction_date', e.target.value)}
-                className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-              />
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Achat / Vente</label>
+              <select
+                value={form.transaction_type}
+                onChange={e => handleChange('transaction_type', e.target.value)}
+                className={`w-full border rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-indigo-500 focus:border-transparent ${
+                  form.transaction_type === 'sell'
+                    ? 'border-red-300 dark:border-red-600'
+                    : 'border-emerald-300 dark:border-emerald-600'
+                }`}
+              >
+                <option value="buy">Achat</option>
+                <option value="sell">Vente</option>
+              </select>
             </div>
+          </div>
+
+          {/* Date */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Date</label>
+            <input
+              type="datetime-local"
+              value={form.transaction_date}
+              onChange={e => handleChange('transaction_date', e.target.value)}
+              className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            />
           </div>
 
           {/* Prix + Quantite */}

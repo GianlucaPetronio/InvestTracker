@@ -266,6 +266,328 @@ async function getEtherscanLikeTxDetails(txHash, blockchainConfig, apiKey, recip
 }
 
 // ---------------------------------------------------------------------------
+// XRP Ledger - via XRPL JSON-RPC (public, sans cle API)
+// ---------------------------------------------------------------------------
+async function getXrpTxDetails(txHash, blockchainConfig, recipientAddress = null) {
+  const rpcUrl = blockchainConfig.api_url || 'https://s1.ripple.com:51234/';
+
+  try {
+    const response = await axios.post(rpcUrl, {
+      method: 'tx',
+      params: [{ transaction: txHash, binary: false }],
+    });
+
+    const result = response.data.result;
+    if (!result || result.status === 'error') {
+      throw new Error('Transaction XRP non trouvee');
+    }
+
+    const tx = result;
+
+    // Montant en drops (1 XRP = 1,000,000 drops)
+    const deliveredAmount = tx.meta?.delivered_amount || tx.Amount;
+    const quantity = typeof deliveredAmount === 'string'
+      ? parseInt(deliveredAmount, 10) / 1e6
+      : 0;
+
+    // Fee en drops
+    const fees = parseInt(tx.Fee || '0', 10) / 1e6;
+
+    // Timestamp : Ripple Epoch = Unix Epoch + 946684800
+    const RIPPLE_EPOCH_OFFSET = 946684800;
+    const timestamp = tx.date
+      ? new Date((tx.date + RIPPLE_EPOCH_OFFSET) * 1000).toISOString()
+      : null;
+
+    // Statut
+    const isSuccess = tx.validated && tx.meta?.TransactionResult === 'tesSUCCESS';
+    const confirmations = tx.validated
+      ? (isSuccess ? 'confirmee' : 'echouee')
+      : 'non confirmee';
+
+    const from = tx.Account || null;
+    const to = tx.Destination || null;
+
+    if (recipientAddress && to && recipientAddress !== to) {
+      throw new Error("Cette adresse n'est pas la destination de cette transaction");
+    }
+
+    return {
+      hash: tx.hash || txHash,
+      blockchain: blockchainConfig.symbol,
+      timestamp,
+      confirmations,
+      blockHeight: tx.ledger_index || null,
+      quantity,
+      fees,
+      from,
+      to: recipientAddress || to,
+      outputs: [{ address: to, value: quantity }],
+      totalOutputs: 1,
+      relevantOutputs: 1,
+    };
+  } catch (error) {
+    if (error.message.includes('non trouvee')) throw error;
+    if (error.message.includes('pas la destination')) throw error;
+    throw new Error(`Erreur API XRP: ${error.message}`);
+  }
+}
+
+
+// ---------------------------------------------------------------------------
+// Tron - via TronGrid REST API (public, sans cle API)
+// ---------------------------------------------------------------------------
+async function getTrxTxDetails(txHash, blockchainConfig, recipientAddress = null) {
+  const baseUrl = blockchainConfig.api_url || 'https://api.trongrid.io';
+
+  try {
+    // Trois appels en parallele : tx avec visible=true (base58), txInfo, et tx brut (pour le montant)
+    const [txVisibleResponse, txInfoResponse] = await Promise.all([
+      axios.post(`${baseUrl}/wallet/gettransactionbyid`, { value: txHash, visible: true }),
+      axios.post(`${baseUrl}/wallet/gettransactioninfobyid`, { value: txHash }),
+    ]);
+
+    const tx = txVisibleResponse.data;
+    const txInfo = txInfoResponse.data;
+
+    if (!tx || !tx.txID) {
+      throw new Error('Transaction TRX non trouvee');
+    }
+
+    // Extraire le contrat de transfert TRX
+    const contract = tx.raw_data?.contract?.[0];
+    if (!contract) {
+      throw new Error('Transaction TRX non trouvee');
+    }
+
+    const contractValue = contract.parameter?.value || {};
+
+    // Avec visible=true, les adresses sont deja en base58 (T...)
+    const fromBase58 = contractValue.owner_address || '';
+    const toBase58 = contractValue.to_address || '';
+
+    // Montant en SUN (1 TRX = 1,000,000 SUN)
+    const quantity = (contractValue.amount || 0) / 1e6;
+
+    // Fee en SUN (peut etre 0 si bandwidth suffisant)
+    const fees = (txInfo.fee || 0) / 1e6;
+
+    // Timestamp depuis txInfo (en millisecondes)
+    const timestamp = txInfo.blockTimeStamp
+      ? new Date(txInfo.blockTimeStamp).toISOString()
+      : null;
+
+    // Statut
+    const isSuccess = tx.ret?.[0]?.contractRet === 'SUCCESS';
+    const confirmations = txInfo.blockNumber
+      ? (isSuccess ? 'confirmee' : 'echouee')
+      : 'non confirmee';
+
+    if (recipientAddress && toBase58 && recipientAddress !== toBase58) {
+      throw new Error("Cette adresse n'est pas la destination de cette transaction");
+    }
+
+    return {
+      hash: tx.txID,
+      blockchain: blockchainConfig.symbol,
+      timestamp,
+      confirmations,
+      blockHeight: txInfo.blockNumber || null,
+      quantity,
+      fees,
+      from: fromBase58,
+      to: recipientAddress || toBase58,
+      outputs: [{ address: toBase58, value: quantity }],
+      totalOutputs: 1,
+      relevantOutputs: 1,
+    };
+  } catch (error) {
+    if (error.message.includes('non trouvee')) throw error;
+    if (error.message.includes('pas la destination')) throw error;
+    throw new Error(`Erreur API TRX: ${error.message}`);
+  }
+}
+
+
+// ---------------------------------------------------------------------------
+// Cardano - via Koios REST API (public, sans cle API)
+// ---------------------------------------------------------------------------
+async function getAdaTxDetails(txHash, blockchainConfig, recipientAddress = null) {
+  const baseUrl = blockchainConfig.api_url || 'https://api.koios.rest/api/v1';
+
+  try {
+    const response = await axios.post(
+      `${baseUrl}/tx_info`,
+      { _tx_hashes: [txHash] },
+      { headers: { 'Content-Type': 'application/json' } }
+    );
+
+    const txArray = response.data;
+    if (!txArray || txArray.length === 0) {
+      throw new Error('Transaction ADA non trouvee');
+    }
+
+    const tx = txArray[0];
+
+    // Fee en lovelace (1 ADA = 1,000,000 lovelace)
+    const fees = parseInt(tx.fee || '0', 10) / 1e6;
+
+    // Timestamp depuis tx_timestamp ou block_time (Unix seconds)
+    const rawTs = tx.tx_timestamp || tx.block_time;
+    const timestamp = rawTs
+      ? new Date(rawTs * 1000).toISOString()
+      : null;
+
+    // Statut
+    const confirmations = tx.block_hash ? 'confirmee' : 'non confirmee';
+
+    // Modele UTXO : multiple inputs/outputs
+    const allOutputs = (tx.outputs || []).map(output => ({
+      address: output.payment_addr?.bech32 || output.stake_addr || 'inconnu',
+      value: parseInt(output.value || '0', 10) / 1e6,
+    }));
+
+    // Inputs
+    const fromAddress = tx.inputs?.[0]?.payment_addr?.bech32 || null;
+
+    let quantity;
+    let relevantOutputs;
+    let toAddress;
+
+    if (recipientAddress) {
+      const matched = allOutputs.filter(o => o.address === recipientAddress);
+      if (matched.length === 0) {
+        throw new Error("Cette adresse n'a pas recu de fonds dans cette transaction");
+      }
+      quantity = matched.reduce((sum, o) => sum + o.value, 0);
+      relevantOutputs = matched.length;
+      toAddress = recipientAddress;
+    } else {
+      // Sans adresse recipient : somme de tous les outputs
+      quantity = allOutputs.reduce((sum, o) => sum + o.value, 0);
+      relevantOutputs = allOutputs.length;
+      toAddress = allOutputs[0]?.address || null;
+    }
+
+    return {
+      hash: tx.tx_hash || txHash,
+      blockchain: blockchainConfig.symbol,
+      timestamp,
+      confirmations,
+      blockHeight: tx.block_height || null,
+      quantity,
+      fees,
+      from: fromAddress,
+      to: toAddress,
+      outputs: allOutputs,
+      totalOutputs: allOutputs.length,
+      relevantOutputs,
+    };
+  } catch (error) {
+    if (error.message.includes('non trouvee')) throw error;
+    if (error.message.includes('pas recu de fonds')) throw error;
+    throw new Error(`Erreur API ADA: ${error.message}`);
+  }
+}
+
+
+// ---------------------------------------------------------------------------
+// Polkadot - via Subscan REST API (cle optionnelle)
+// ---------------------------------------------------------------------------
+async function getDotTxDetails(txHash, blockchainConfig, recipientAddress = null) {
+  const baseUrl = blockchainConfig.api_url || 'https://polkadot.api.subscan.io';
+  const apiKey = process.env.SUBSCAN_API_KEY || '';
+
+  try {
+    const headers = { 'Content-Type': 'application/json' };
+    if (apiKey) {
+      headers['X-API-Key'] = apiKey;
+    }
+
+    const response = await axios.post(
+      `${baseUrl}/api/scan/extrinsic`,
+      { hash: txHash },
+      { headers }
+    );
+
+    const result = response.data;
+    if (!result || result.code !== 0 || !result.data) {
+      throw new Error('Transaction DOT non trouvee');
+    }
+
+    const tx = result.data;
+
+    // Montant en planck (1 DOT = 10^10 planck)
+    const fees = parseFloat(tx.fee || '0') / 1e10;
+
+    // Timestamp (Unix seconds)
+    const timestamp = tx.block_timestamp
+      ? new Date(tx.block_timestamp * 1000).toISOString()
+      : null;
+
+    // Statut
+    const confirmations = tx.success ? 'confirmee' : 'echouee';
+
+    // Extraire dest et value depuis tx.params
+    let params = tx.params;
+    if (typeof params === 'string') {
+      try {
+        params = JSON.parse(params);
+      } catch {
+        params = [];
+      }
+    }
+    if (!Array.isArray(params)) {
+      params = [];
+    }
+
+    let to = null;
+    let quantity = 0;
+
+    // Chercher dest et value dans les params
+    for (const param of params) {
+      if (param.name === 'dest' || param.name === 'dest_weight') {
+        // dest peut etre un objet { Id: "address" } ou une string
+        if (typeof param.value === 'object' && param.value !== null) {
+          to = param.value.Id || param.value.id || null;
+        } else {
+          to = param.value || null;
+        }
+      }
+      if (param.name === 'value') {
+        quantity = parseFloat(param.value || '0') / 1e10;
+      }
+    }
+
+    const from = tx.account_id || null;
+
+    if (recipientAddress && to && recipientAddress !== to) {
+      throw new Error("Cette adresse n'est pas la destination de cette transaction");
+    }
+
+    return {
+      hash: tx.extrinsic_hash || txHash,
+      blockchain: blockchainConfig.symbol,
+      timestamp,
+      confirmations,
+      blockHeight: tx.block_num || null,
+      quantity,
+      fees,
+      from,
+      to: recipientAddress || to,
+      outputs: to ? [{ address: to, value: quantity }] : [],
+      totalOutputs: to ? 1 : 0,
+      relevantOutputs: to ? 1 : 0,
+    };
+  } catch (error) {
+    if (error.message.includes('non trouvee')) throw error;
+    if (error.message.includes('pas la destination')) throw error;
+    throw new Error(`Erreur API DOT: ${error.message}`);
+  }
+}
+
+
+// ---------------------------------------------------------------------------
 // Routeur principal - dispatch sur api_type depuis la config DB
 // ---------------------------------------------------------------------------
 async function getTransactionDetails(txHash, blockchain, recipientAddress = null) {
@@ -286,6 +608,14 @@ async function getTransactionDetails(txHash, blockchain, recipientAddress = null
       return getEtherscanLikeTxDetails(txHash, config, apiKey, recipientAddress);
     case 'solana':
       return getSolanaTxDetails(txHash, config, recipientAddress);
+    case 'xrp':
+      return getXrpTxDetails(txHash, config, recipientAddress);
+    case 'tron':
+      return getTrxTxDetails(txHash, config, recipientAddress);
+    case 'cardano':
+      return getAdaTxDetails(txHash, config, recipientAddress);
+    case 'subscan':
+      return getDotTxDetails(txHash, config, recipientAddress);
     case 'unsupported':
       throw new Error(
         `La recuperation automatique n'est pas disponible pour ${config.name}. ` +
@@ -540,6 +870,100 @@ async function getTransactionOutputAddresses(txHash, blockchain) {
         }
       }
       return { success: true, addresses };
+    }
+
+    if (config.api_type === 'xrp') {
+      const rpcUrl = config.api_url || 'https://s1.ripple.com:51234/';
+      const rpcResponse = await axios.post(rpcUrl, {
+        method: 'tx',
+        params: [{ transaction: txHash, binary: false }],
+      });
+      const tx = rpcResponse.data.result;
+      if (!tx || tx.status === 'error') {
+        return { success: false, error: 'Transaction non trouvee' };
+      }
+      const deliveredAmount = tx.meta?.delivered_amount || tx.Amount;
+      const amount = typeof deliveredAmount === 'string'
+        ? parseInt(deliveredAmount, 10) / 1e6 : 0;
+      return {
+        success: true,
+        addresses: tx.Destination ? [{ address: tx.Destination, amount }] : [],
+      };
+    }
+
+    if (config.api_type === 'tron') {
+      const baseUrl = config.api_url || 'https://api.trongrid.io';
+      const txResponse = await axios.post(`${baseUrl}/wallet/gettransactionbyid`, {
+        value: txHash, visible: true,
+      });
+      const tx = txResponse.data;
+      if (!tx || !tx.txID) {
+        return { success: false, error: 'Transaction non trouvee' };
+      }
+      const contractValue = tx.raw_data?.contract?.[0]?.parameter?.value || {};
+      const amount = (contractValue.amount || 0) / 1e6;
+      const to = contractValue.to_address || null;
+      return {
+        success: true,
+        addresses: to ? [{ address: to, amount }] : [],
+      };
+    }
+
+    if (config.api_type === 'cardano') {
+      const baseUrl = config.api_url || 'https://api.koios.rest/api/v1';
+      const koiosResponse = await axios.post(
+        `${baseUrl}/tx_info`,
+        { _tx_hashes: [txHash] },
+        { headers: { 'Content-Type': 'application/json' } }
+      );
+      const txArray = koiosResponse.data;
+      if (!txArray || txArray.length === 0) {
+        return { success: false, error: 'Transaction non trouvee' };
+      }
+      const tx = txArray[0];
+      const addresses = (tx.outputs || []).map(output => ({
+        address: output.payment_addr?.bech32 || output.stake_addr || 'inconnu',
+        amount: parseInt(output.value || '0', 10) / 1e6,
+      }));
+      return { success: true, addresses };
+    }
+
+    if (config.api_type === 'subscan') {
+      const baseUrl = config.api_url || 'https://polkadot.api.subscan.io';
+      const subscanApiKey = process.env.SUBSCAN_API_KEY || '';
+      const headers = { 'Content-Type': 'application/json' };
+      if (subscanApiKey) headers['X-API-Key'] = subscanApiKey;
+      const subscanResponse = await axios.post(
+        `${baseUrl}/api/scan/extrinsic`,
+        { hash: txHash },
+        { headers }
+      );
+      const result = subscanResponse.data;
+      if (!result || result.code !== 0 || !result.data) {
+        return { success: false, error: 'Transaction non trouvee' };
+      }
+      const tx = result.data;
+      let params = tx.params;
+      if (typeof params === 'string') {
+        try { params = JSON.parse(params); } catch { params = []; }
+      }
+      if (!Array.isArray(params)) params = [];
+      let to = null;
+      let amount = 0;
+      for (const param of params) {
+        if (param.name === 'dest') {
+          to = typeof param.value === 'object' && param.value !== null
+            ? (param.value.Id || param.value.id || null)
+            : param.value || null;
+        }
+        if (param.name === 'value') {
+          amount = parseFloat(param.value || '0') / 1e10;
+        }
+      }
+      return {
+        success: true,
+        addresses: to ? [{ address: to, amount }] : [],
+      };
     }
 
     return {

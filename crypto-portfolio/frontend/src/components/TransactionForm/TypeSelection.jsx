@@ -1,4 +1,4 @@
-export default function TypeSelection({ onSelect, onShowLedgerGuide }) {
+export default function TypeSelection({ onSelect, onShowLedgerGuide, transactionType, onTransactionTypeChange }) {
   return (
     <div className="space-y-6">
       <div className="text-center mb-8">
@@ -8,6 +8,40 @@ export default function TypeSelection({ onSelect, onShowLedgerGuide }) {
         <p className="text-gray-600 dark:text-gray-400">
           Choisissez la methode la plus adaptee
         </p>
+      </div>
+
+      {/* Toggle Achat / Vente */}
+      <div className="flex justify-center gap-3 mb-6">
+        <button
+          onClick={() => onTransactionTypeChange('buy')}
+          className={`flex-1 max-w-[200px] py-3 px-6 rounded-lg font-semibold text-sm transition-all border-2 ${
+            transactionType === 'buy'
+              ? 'bg-emerald-600 text-white border-emerald-600 shadow-lg shadow-emerald-200 dark:shadow-emerald-900/30'
+              : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:border-emerald-400 dark:hover:border-emerald-600'
+          }`}
+        >
+          <span className="flex items-center justify-center gap-2">
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+            </svg>
+            Achat
+          </span>
+        </button>
+        <button
+          onClick={() => onTransactionTypeChange('sell')}
+          className={`flex-1 max-w-[200px] py-3 px-6 rounded-lg font-semibold text-sm transition-all border-2 ${
+            transactionType === 'sell'
+              ? 'bg-red-600 text-white border-red-600 shadow-lg shadow-red-200 dark:shadow-red-900/30'
+              : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:border-red-400 dark:hover:border-red-600'
+          }`}
+        >
+          <span className="flex items-center justify-center gap-2">
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 12h-15" />
+            </svg>
+            Vente
+          </span>
+        </button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -68,6 +102,7 @@ export default function TypeSelection({ onSelect, onShowLedgerGuide }) {
             <span className="text-xl group-hover:translate-x-1 transition-transform">&rarr;</span>
           </div>
         </button>
+
       </div>
 
       {/* Help Section */}

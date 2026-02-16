@@ -123,19 +123,37 @@ router.get('/detect/:hash', async (req, res) => {
     const blockchainManager = require('../services/blockchainManager');
     const allBlockchains = await blockchainManager.getAllBlockchains();
 
-    for (const bc of allBlockchains) {
-      if (blockchainManager.validateHash(hash, bc)) {
-        return res.json({
-          success: true,
-          blockchain: bc.symbol,
-          symbol: bc.asset_symbol,
-        });
-      }
+    // Collecter TOUS les patterns qui matchent
+    const matches = allBlockchains.filter(bc => blockchainManager.validateHash(hash, bc));
+
+    if (matches.length === 0) {
+      return res.json({ success: false, message: 'Format de hash non reconnu' });
     }
 
-    res.json({
-      success: false,
-      message: 'Format de hash non reconnu',
+    if (matches.length === 1) {
+      return res.json({
+        success: true,
+        blockchain: matches[0].symbol,
+        symbol: matches[0].asset_symbol,
+      });
+    }
+
+    // Plusieurs matches : privilegier le pattern le plus specifique.
+    // Un pattern qui ne matche PAS la version lowercase du hash est plus
+    // restrictif (ex: XRP [A-F0-9] vs BTC [a-fA-F0-9]).
+    const hashLower = hash.toLowerCase();
+    matches.sort((a, b) => {
+      const aMatchesLower = blockchainManager.validateHash(hashLower, a);
+      const bMatchesLower = blockchainManager.validateHash(hashLower, b);
+      if (!aMatchesLower && bMatchesLower) return -1;
+      if (aMatchesLower && !bMatchesLower) return 1;
+      return 0;
+    });
+
+    return res.json({
+      success: true,
+      blockchain: matches[0].symbol,
+      symbol: matches[0].asset_symbol,
     });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Erreur serveur' });

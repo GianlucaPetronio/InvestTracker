@@ -21,7 +21,13 @@
       "Bash(docker exec:*)",
       "Bash(if not exist \"Q:\\\\Gianluca_Perso\\\\InvestTracker\\\\crypto-portfolio\\\\backend\\\\src\\\\middleware\" mkdir \"Q:\\\\Gianluca_Perso\\\\InvestTracker\\\\crypto-portfolio\\\\backend\\\\src\\\\middleware\")",
       "Bash(ls -la \"Q:\\\\Gianluca_Perso\\\\InvestTracker\\\\crypto-portfolio\\\\backend\\\\src\\\\models\"\" | grep -E \"migration)",
-      "Bash(schema \")"
+      "Bash(schema \")",
+      "Bash(del \"Q:\\\\Gianluca_Perso\\\\InvestTracker\\\\crypto-portfolio\\\\frontend\\\\src\\\\components\\\\TransactionForm\\\\BatchInput.jsx\")",
+      "Bash(git ls-tree:*)",
+      "Bash(docker ps:*)",
+      "Bash(cmd /c \"docker ps 2>nul\")",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ]
   }
 }

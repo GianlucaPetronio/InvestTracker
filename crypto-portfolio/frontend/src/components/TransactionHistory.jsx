@@ -222,6 +222,13 @@ function TransactionHistory() {
                       }`}>
                         {tx.asset_type}
                       </span>
+                      <span className={`ml-1 text-xs px-2 py-0.5 rounded-full font-semibold ${
+                        tx.transaction_type === 'sell'
+                          ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
+                          : 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400'
+                      }`}>
+                        {tx.transaction_type === 'sell' ? 'Vente' : 'Achat'}
+                      </span>
                     </td>
                     <td className="px-4 py-3 text-sm">
                       <span className={`px-2 py-0.5 rounded text-xs ${

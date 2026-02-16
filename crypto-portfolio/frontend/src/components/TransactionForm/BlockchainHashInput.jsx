@@ -28,7 +28,6 @@ function sortByMarketCap(blockchains) {
   return [...blockchains].sort((a, b) => {
     const ia = MARKET_CAP_ORDER.indexOf(a.symbol);
     const ib = MARKET_CAP_ORDER.indexOf(b.symbol);
-    // Blockchains connues d'abord (par market cap), puis les custom a la fin
     return (ia === -1 ? 999 : ia) - (ib === -1 ? 999 : ib);
   });
 }
@@ -40,7 +39,7 @@ const DEFAULT_BLOCKCHAINS = [
   { symbol: 'XRP', name: 'XRP Ledger', icon: '\u2715', needs_recipient_address: false, hash_pattern: '^[A-F0-9]{64}$' },
   { symbol: 'SOL', name: 'Solana', icon: '\u25ce', needs_recipient_address: true, hash_pattern: '^[1-9A-HJ-NP-Za-km-z]{87,88}$' },
   { symbol: 'BSC', name: 'BNB Smart Chain', icon: '\u25c7', needs_recipient_address: false, hash_pattern: '^0x[a-fA-F0-9]{64}$' },
-  { symbol: 'ADA', name: 'Cardano', icon: '\u2641', needs_recipient_address: false, hash_pattern: '^[a-fA-F0-9]{64}$' },
+  { symbol: 'ADA', name: 'Cardano', icon: '\u2641', needs_recipient_address: true, hash_pattern: '^[a-fA-F0-9]{64}$' },
   { symbol: 'TRX', name: 'Tron', icon: '\u25c8', needs_recipient_address: false, hash_pattern: '^[a-fA-F0-9]{64}$' },
   { symbol: 'AVAX', name: 'Avalanche', icon: '\u25b2', needs_recipient_address: false, hash_pattern: '^0x[a-fA-F0-9]{64}$' },
   { symbol: 'DOT', name: 'Polkadot', icon: '\u25cf', needs_recipient_address: false, hash_pattern: '^0x[a-fA-F0-9]{64}$' },
@@ -50,7 +49,7 @@ const DEFAULT_BLOCKCHAINS = [
 export default function BlockchainHashInput({ onValidate, loading, onShowLedgerGuide }) {
   const [availableBlockchains, setAvailableBlockchains] = useState(DEFAULT_BLOCKCHAINS);
   const [blockchain, setBlockchain] = useState('');
-  const [txHash, setTxHash] = useState('');
+  const [txHashes, setTxHashes] = useState(['']);
   const [recipientAddress, setRecipientAddress] = useState('');
   const [suggestedAddresses, setSuggestedAddresses] = useState([]);
   const [fetchingAddresses, setFetchingAddresses] = useState(false);
@@ -61,6 +60,9 @@ export default function BlockchainHashInput({ onValidate, loading, onShowLedgerG
   const selectedBc = availableBlockchains.find(b => b.symbol === blockchain);
   const showAddressField = selectedBc?.needs_recipient_address || false;
 
+  // Premier hash non-vide (pour auto-detection et fetch adresses)
+  const firstHash = txHashes.find(h => h.trim().length > 0) || '';
+
   // Charger les blockchains depuis l'API (fusionne avec les defauts)
   useEffect(() => {
     (async () => {
@@ -68,43 +70,42 @@ export default function BlockchainHashInput({ onValidate, loading, onShowLedgerG
         const response = await getBlockchains(false);
         const fromApi = response.data.blockchains;
         if (fromApi && fromApi.length > 0) {
-          // Fusionner : prendre les blockchains API, puis ajouter les defauts manquants
           const apiSymbols = new Set(fromApi.map(b => b.symbol));
           const missing = DEFAULT_BLOCKCHAINS.filter(b => !apiSymbols.has(b.symbol));
           setAvailableBlockchains(sortByMarketCap([...fromApi, ...missing]));
         }
       } catch {
-        // Fallback silencieux : on garde les blockchains par defaut
+        // Fallback silencieux
       }
     })();
   }, []);
 
-  // Auto-detection de la blockchain depuis le hash
+  // Auto-detection de la blockchain depuis le premier hash
   useEffect(() => {
-    if (txHash.length > 20 && !blockchain) {
+    if (firstHash.length > 20 && !blockchain) {
       detectBlockchain();
     }
-  }, [txHash]);
+  }, [firstHash]);
 
   // Fetch des adresses de destination quand hash et blockchain sont remplis
   useEffect(() => {
-    if (blockchain && txHash.length > 40 && showAddressField) {
+    if (blockchain && firstHash.length > 40 && showAddressField) {
       fetchOutputAddresses();
     } else {
       setSuggestedAddresses([]);
     }
-  }, [blockchain, txHash]);
+  }, [blockchain, firstHash]);
 
   const detectBlockchain = async () => {
     setAutoDetecting(true);
     try {
-      const response = await api.get(`/blockchain/detect/${encodeURIComponent(txHash)}`);
+      const response = await api.get(`/blockchain/detect/${encodeURIComponent(firstHash)}`);
       if (response.data.success) {
         setBlockchain(response.data.blockchain);
-        setErrors(prev => ({ ...prev, hash: '' }));
+        setErrors(prev => ({ ...prev, hash_0: '' }));
       }
     } catch {
-      // Silently fail, user can select manually
+      // Silently fail
     } finally {
       setAutoDetecting(false);
     }
@@ -113,7 +114,7 @@ export default function BlockchainHashInput({ onValidate, loading, onShowLedgerG
   const fetchOutputAddresses = async () => {
     setFetchingAddresses(true);
     try {
-      const response = await api.get(`/blockchain/outputs/${blockchain}/${encodeURIComponent(txHash)}`);
+      const response = await api.get(`/blockchain/outputs/${blockchain}/${encodeURIComponent(firstHash)}`);
       if (response.data.success && response.data.addresses) {
         setSuggestedAddresses(response.data.addresses);
       }
@@ -122,6 +123,30 @@ export default function BlockchainHashInput({ onValidate, loading, onShowLedgerG
     } finally {
       setFetchingAddresses(false);
     }
+  };
+
+  const updateHash = (index, value) => {
+    setTxHashes(prev => prev.map((h, i) => i === index ? value : h));
+    setErrors(prev => ({ ...prev, [`hash_${index}`]: '' }));
+  };
+
+  const addHashField = () => {
+    setTxHashes(prev => [...prev, '']);
+  };
+
+  const removeHashField = (index) => {
+    if (txHashes.length <= 1) return;
+    setTxHashes(prev => prev.filter((_, i) => i !== index));
+    // Re-index errors
+    setErrors(prev => {
+      const next = {};
+      for (const [key, val] of Object.entries(prev)) {
+        if (!key.startsWith('hash_')) {
+          next[key] = val;
+        }
+      }
+      return next;
+    });
   };
 
   const handleSubmit = (e) => {
@@ -133,9 +158,18 @@ export default function BlockchainHashInput({ onValidate, loading, onShowLedgerG
       newErrors.blockchain = 'Veuillez selectionner une blockchain';
     }
 
-    if (!txHash.trim()) {
-      newErrors.hash = 'Veuillez entrer un hash de transaction';
+    const nonEmptyHashes = txHashes.map((h, i) => ({ hash: h.trim(), index: i })).filter(x => x.hash);
+
+    if (nonEmptyHashes.length === 0) {
+      newErrors.hash_0 = 'Veuillez entrer au moins un hash de transaction';
     }
+
+    // Valider chaque hash non-vide
+    nonEmptyHashes.forEach(({ hash, index }) => {
+      if (!hash) {
+        newErrors[`hash_${index}`] = 'Hash vide';
+      }
+    });
 
     if (showAddressField && !recipientAddress.trim()) {
       newErrors.address = 'Veuillez specifier votre adresse de reception';
@@ -146,15 +180,15 @@ export default function BlockchainHashInput({ onValidate, loading, onShowLedgerG
       return;
     }
 
-    onValidate(blockchain, txHash, recipientAddress || null);
+    const hashes = nonEmptyHashes.map(x => x.hash);
+    onValidate(blockchain, hashes, recipientAddress || null);
   };
 
-  const handlePaste = async (field) => {
+  const handlePaste = async (field, index = 0) => {
     try {
       const text = await navigator.clipboard.readText();
       if (field === 'hash') {
-        setTxHash(text.trim());
-        setErrors(prev => ({ ...prev, hash: '' }));
+        updateHash(index, text.trim());
       } else if (field === 'address') {
         setRecipientAddress(text.trim());
         setErrors(prev => ({ ...prev, address: '' }));
@@ -168,6 +202,8 @@ export default function BlockchainHashInput({ onValidate, loading, onShowLedgerG
     setRecipientAddress(address);
     setErrors(prev => ({ ...prev, address: '' }));
   };
+
+  const hashCount = txHashes.filter(h => h.trim()).length;
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -245,46 +281,86 @@ export default function BlockchainHashInput({ onValidate, loading, onShowLedgerG
         )}
       </div>
 
-      {/* Hash Input */}
+      {/* Hash Inputs (multiple) */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-          Hash de Transaction
-        </label>
-        <div className="relative">
-          <input
-            type="text"
-            value={txHash}
-            onChange={(e) => {
-              setTxHash(e.target.value);
-              setErrors(prev => ({ ...prev, hash: '' }));
-            }}
-            placeholder={blockchain
-              ? `Hash de transaction ${selectedBc?.name || blockchain}`
-              : "Selectionnez d'abord une blockchain"
-            }
-            className={`w-full px-4 py-3 pr-20 rounded-lg border-2
-                      ${errors.hash
-                        ? 'border-red-500 dark:border-red-400'
-                        : 'border-gray-200 dark:border-gray-700'
-                      }
-                      bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100
-                      focus:outline-none focus:border-indigo-500 dark:focus:border-indigo-400
-                      font-mono text-sm`}
-          />
+        <div className="flex items-center justify-between mb-2">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            Hash de Transaction {txHashes.length > 1 && (
+              <span className="text-indigo-600 dark:text-indigo-400 ml-1">
+                ({hashCount} hash{hashCount > 1 ? 'es' : ''})
+              </span>
+            )}
+          </label>
           <button
             type="button"
-            onClick={() => handlePaste('hash')}
-            className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1.5
-                     text-sm text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50
-                     dark:hover:bg-indigo-900/20 rounded transition-colors font-medium"
+            onClick={addHashField}
+            className="flex items-center gap-1 text-sm text-indigo-600 dark:text-indigo-400
+                     hover:text-indigo-700 dark:hover:text-indigo-300 font-medium transition-colors"
           >
-            Coller
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+            </svg>
+            Ajouter un hash
           </button>
         </div>
-        {errors.hash && (
-          <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.hash}</p>
+
+        <div className="space-y-3">
+          {txHashes.map((hash, index) => (
+            <div key={index} className="flex items-center gap-2">
+              {txHashes.length > 1 && (
+                <span className="text-xs text-gray-400 dark:text-gray-500 font-mono w-5 text-right flex-shrink-0">
+                  {index + 1}
+                </span>
+              )}
+              <div className="relative flex-1">
+                <input
+                  type="text"
+                  value={hash}
+                  onChange={(e) => updateHash(index, e.target.value)}
+                  placeholder={blockchain
+                    ? `Hash de transaction ${selectedBc?.name || blockchain}`
+                    : "Selectionnez d'abord une blockchain"
+                  }
+                  className={`w-full px-4 py-3 pr-20 rounded-lg border-2
+                            ${errors[`hash_${index}`]
+                              ? 'border-red-500 dark:border-red-400'
+                              : 'border-gray-200 dark:border-gray-700'
+                            }
+                            bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100
+                            focus:outline-none focus:border-indigo-500 dark:focus:border-indigo-400
+                            font-mono text-sm`}
+                />
+                <button
+                  type="button"
+                  onClick={() => handlePaste('hash', index)}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1.5
+                           text-sm text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50
+                           dark:hover:bg-indigo-900/20 rounded transition-colors font-medium"
+                >
+                  Coller
+                </button>
+              </div>
+              {txHashes.length > 1 && (
+                <button
+                  type="button"
+                  onClick={() => removeHashField(index)}
+                  className="p-2 text-gray-400 hover:text-red-500 dark:hover:text-red-400
+                           transition-colors flex-shrink-0"
+                  title="Supprimer ce hash"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {errors.hash_0 && (
+          <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.hash_0}</p>
         )}
-        {blockchain && !errors.hash && selectedBc?.hash_pattern && (
+        {blockchain && !errors.hash_0 && selectedBc?.hash_pattern && txHashes.length === 1 && (
           <p className="mt-1 text-xs text-gray-500 dark:text-gray-400 font-mono">
             Pattern : {selectedBc.hash_pattern}
           </p>
@@ -306,6 +382,9 @@ export default function BlockchainHashInput({ onValidate, loading, onShowLedgerG
               <p className="text-sm text-gray-700 dark:text-gray-300">
                 Une transaction {blockchain} peut avoir plusieurs destinations.
                 Specifiez VOTRE adresse pour calculer le montant exact recu.
+                {txHashes.filter(h => h.trim()).length > 1 && (
+                  <span className="font-medium"> Cette adresse sera utilisee pour tous les hashes.</span>
+                )}
               </p>
             </div>
           </div>
@@ -432,7 +511,7 @@ export default function BlockchainHashInput({ onValidate, loading, onShowLedgerG
       {/* Submit Button */}
       <button
         type="submit"
-        disabled={loading || !blockchain || !txHash}
+        disabled={loading || !blockchain || hashCount === 0}
         className="w-full py-4 px-6 bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-300
                  dark:disabled:bg-gray-700 text-white font-semibold rounded-lg
                  transition-colors disabled:cursor-not-allowed flex items-center justify-center gap-2"
@@ -444,7 +523,10 @@ export default function BlockchainHashInput({ onValidate, loading, onShowLedgerG
           </>
         ) : (
           <>
-            Recuperer les donnees
+            {hashCount > 1
+              ? `Recuperer les donnees (${hashCount} transactions)`
+              : 'Recuperer les donnees'
+            }
             <span className="text-xl">&rarr;</span>
           </>
         )}

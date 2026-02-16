@@ -58,8 +58,13 @@ async function getCurrentPrice(assetSymbol) {
 // ---------------------------------------------------------------------------
 
 async function getMultiplePrices(assetSymbols) {
-  const coinIds = assetSymbols
-    .map(s => COINGECKO_IDS[s.toUpperCase()])
+  const sortedSymbols = [...assetSymbols].map(s => s.toUpperCase()).sort();
+  const cacheKey = `prices:multi:${sortedSymbols.join(',')}`;
+  const cached = cacheService.get(cacheKey);
+  if (cached) return cached;
+
+  const coinIds = sortedSymbols
+    .map(s => COINGECKO_IDS[s])
     .filter(Boolean);
 
   if (coinIds.length === 0) return {};
@@ -73,15 +78,17 @@ async function getMultiplePrices(assetSymbols) {
   });
 
   const results = {};
-  for (const symbol of assetSymbols) {
-    const coinId = COINGECKO_IDS[symbol.toUpperCase()];
+  for (const symbol of sortedSymbols) {
+    const coinId = COINGECKO_IDS[symbol];
     if (coinId && response.data[coinId]) {
-      results[symbol.toUpperCase()] = {
+      results[symbol] = {
         price: response.data[coinId].eur,
         change24h: response.data[coinId].eur_24h_change || 0,
       };
     }
   }
+
+  cacheService.set(cacheKey, results, 60);
   return results;
 }
 

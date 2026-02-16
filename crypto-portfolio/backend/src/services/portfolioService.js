@@ -78,8 +78,8 @@ async function calculateGlobalStats(userId) {
     SELECT
       asset_symbol,
       asset_type,
-      SUM(quantity_purchased) as total_quantity,
-      SUM(amount_invested) as total_invested,
+      SUM(CASE WHEN transaction_type = 'sell' THEN -quantity_purchased ELSE quantity_purchased END) as total_quantity,
+      SUM(CASE WHEN transaction_type = 'sell' THEN -amount_invested ELSE amount_invested END) as total_invested,
       SUM(transaction_fees) as total_fees
     FROM transactions
     WHERE user_id = $1
@@ -139,15 +139,16 @@ async function calculateAssetBreakdown(userId) {
       asset_symbol,
       asset_name,
       asset_type,
-      SUM(quantity_purchased) as total_quantity,
-      SUM(amount_invested) as total_invested,
+      SUM(CASE WHEN transaction_type = 'sell' THEN -quantity_purchased ELSE quantity_purchased END) as total_quantity,
+      SUM(CASE WHEN transaction_type = 'sell' THEN -amount_invested ELSE amount_invested END) as total_invested,
       SUM(transaction_fees) as total_fees,
-      SUM(amount_invested + transaction_fees) / NULLIF(SUM(quantity_purchased), 0) as avg_price,
+      SUM(CASE WHEN transaction_type = 'sell' THEN -amount_invested - transaction_fees ELSE amount_invested + transaction_fees END)
+        / NULLIF(SUM(CASE WHEN transaction_type = 'sell' THEN -quantity_purchased ELSE quantity_purchased END), 0) as avg_price,
       COUNT(*) as tx_count
     FROM transactions
     WHERE user_id = $1
     GROUP BY asset_symbol, asset_name, asset_type
-    ORDER BY SUM(amount_invested) + SUM(transaction_fees) DESC
+    ORDER BY SUM(CASE WHEN transaction_type = 'sell' THEN -amount_invested ELSE amount_invested END) + SUM(transaction_fees) DESC
   `, [userId]);
 
   let assets;
@@ -245,8 +246,8 @@ async function calculatePortfolioHistory(userId, period) {
   const result = await tryQuery(`
     SELECT
       DATE(transaction_date) as date,
-      SUM(amount_invested + transaction_fees) as daily_invested,
-      SUM(SUM(amount_invested + transaction_fees)) OVER (ORDER BY DATE(transaction_date)) as cumulative_invested,
+      SUM(CASE WHEN transaction_type = 'sell' THEN -(amount_invested + transaction_fees) ELSE amount_invested + transaction_fees END) as daily_invested,
+      SUM(SUM(CASE WHEN transaction_type = 'sell' THEN -(amount_invested + transaction_fees) ELSE amount_invested + transaction_fees END)) OVER (ORDER BY DATE(transaction_date)) as cumulative_invested,
       COUNT(*) as transaction_count
     FROM transactions
     ${dateFilter}
@@ -259,7 +260,7 @@ async function calculatePortfolioHistory(userId, period) {
     const hasPeriodFilter = params.length > 1;
     if (hasPeriodFilter && result.rows.length > 0) {
       const priorResult = await query(`
-        SELECT COALESCE(SUM(amount_invested + transaction_fees), 0) as prior_total
+        SELECT COALESCE(SUM(CASE WHEN transaction_type = 'sell' THEN -(amount_invested + transaction_fees) ELSE amount_invested + transaction_fees END), 0) as prior_total
         FROM transactions
         WHERE user_id = $1 AND transaction_date < $2::date
       `, [userId, result.rows[0].date]);
@@ -370,7 +371,8 @@ async function calculateAssetHistory(userId, period) {
       asset_symbol, asset_name, asset_type,
       DATE(transaction_date) as date,
       quantity_purchased, price_at_purchase,
-      amount_invested, transaction_fees
+      amount_invested, transaction_fees,
+      COALESCE(transaction_type, 'buy') as transaction_type
     FROM transactions
     WHERE user_id = $1
     ORDER BY transaction_date ASC
@@ -431,8 +433,11 @@ async function calculateAssetHistory(userId, period) {
       const txDate = result
         ? new Date(tx.date)
         : new Date(tx.transaction_date);
-      const qty = parseFloat(tx.quantity_purchased);
-      const invested = parseFloat(tx.amount_invested || 0) + parseFloat(tx.transaction_fees || 0);
+      const isSell = (tx.transaction_type || 'buy') === 'sell';
+      const rawQty = parseFloat(tx.quantity_purchased);
+      const rawInvested = parseFloat(tx.amount_invested || 0) + parseFloat(tx.transaction_fees || 0);
+      const qty = isSell ? -rawQty : rawQty;
+      const invested = isSell ? -rawInvested : rawInvested;
 
       if (cutoff && txDate < cutoff) {
         priorQty += qty;

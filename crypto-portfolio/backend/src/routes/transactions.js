@@ -40,6 +40,99 @@ router.get('/', async (req, res) => {
 });
 
 // ---------------------------------------------------------------------------
+// POST /api/transactions/bulk - Créer plusieurs transactions (atomique)
+// ---------------------------------------------------------------------------
+router.post('/bulk', async (req, res) => {
+  try {
+    const { transactions } = req.body;
+
+    if (!Array.isArray(transactions) || transactions.length === 0) {
+      return res.status(400).json({ error: 'Un tableau de transactions est requis' });
+    }
+    if (transactions.length > 50) {
+      return res.status(400).json({ error: 'Maximum 50 transactions par requête' });
+    }
+
+    // Valider chaque transaction
+    for (let i = 0; i < transactions.length; i++) {
+      const t = transactions[i];
+      if (!t.asset_symbol || !t.transaction_date || !t.price_at_purchase || !t.quantity_purchased) {
+        return res.status(400).json({
+          error: `Transaction #${i + 1} : champs requis manquants (asset_symbol, transaction_date, price_at_purchase, quantity_purchased)`,
+        });
+      }
+      if (t.source === 'manual') {
+        const validation = validateManualTransaction(t);
+        if (!validation.valid) {
+          return res.status(400).json({ error: `Transaction #${i + 1} : ${validation.errors.join(', ')}` });
+        }
+      }
+    }
+
+    // Vérifier les doublons de hash
+    const hashes = transactions.filter(t => t.transaction_hash).map(t => t.transaction_hash);
+    if (hashes.length > 0) {
+      const placeholders = hashes.map((_, i) => `$${i + 2}`).join(', ');
+      const existing = await query(
+        `SELECT transaction_hash FROM transactions WHERE user_id = $1 AND transaction_hash IN (${placeholders})`,
+        [req.user.id, ...hashes]
+      );
+      if (existing.rows.length > 0) {
+        const dupes = existing.rows.map(r => r.transaction_hash).join(', ');
+        return res.status(409).json({ error: `Hash déjà existant(s) : ${dupes}` });
+      }
+    }
+
+    // Insertion atomique
+    const insertedRows = [];
+    await query('BEGIN');
+    try {
+      for (const t of transactions) {
+        const result = await query(
+          `INSERT INTO transactions
+            (asset_symbol, asset_name, asset_type, transaction_hash, blockchain,
+             transaction_date, amount_invested, price_at_purchase, quantity_purchased,
+             transaction_fees, source, transaction_type, user_id)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+           RETURNING *`,
+          [
+            t.asset_symbol.toUpperCase(),
+            t.asset_name || t.asset_symbol.toUpperCase(),
+            t.asset_type || 'crypto',
+            t.transaction_hash || null,
+            t.blockchain || null,
+            t.transaction_date,
+            t.amount_invested || (t.price_at_purchase * t.quantity_purchased),
+            t.price_at_purchase,
+            t.quantity_purchased,
+            t.transaction_fees || 0,
+            t.source || 'manual',
+            t.transaction_type || 'buy',
+            req.user.id,
+          ]
+        );
+        insertedRows.push(result.rows[0]);
+      }
+      await query('COMMIT');
+    } catch (insertError) {
+      await query('ROLLBACK');
+      throw insertError;
+    }
+
+    res.status(201).json({
+      success: true,
+      count: insertedRows.length,
+      transactions: insertedRows,
+    });
+  } catch (error) {
+    if (error.code === '23505') {
+      return res.status(409).json({ error: 'Une transaction blockchain en doublon a été détectée' });
+    }
+    res.status(500).json({ error: error.message || 'Erreur lors de la création des transactions' });
+  }
+});
+
+// ---------------------------------------------------------------------------
 // GET /api/transactions/:id - Détail d'une transaction
 // ---------------------------------------------------------------------------
 router.get('/:id', async (req, res) => {
@@ -63,7 +156,7 @@ router.post('/', async (req, res) => {
       asset_symbol, asset_name, asset_type,
       transaction_hash, blockchain,
       transaction_date, amount_invested, price_at_purchase,
-      quantity_purchased, transaction_fees, source,
+      quantity_purchased, transaction_fees, source, transaction_type,
     } = req.body;
 
     // Validation des champs requis (toutes sources)
@@ -104,14 +197,15 @@ router.post('/', async (req, res) => {
       `INSERT INTO transactions
         (asset_symbol, asset_name, asset_type, transaction_hash, blockchain,
          transaction_date, amount_invested, price_at_purchase, quantity_purchased,
-         transaction_fees, source, user_id)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+         transaction_fees, source, transaction_type, user_id)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
        RETURNING *`,
       [
         asset_symbol.toUpperCase(), asset_name || asset_symbol.toUpperCase(), asset_type || 'crypto',
         transaction_hash || null, blockchain || null,
         transaction_date, amount_invested || (price_at_purchase * quantity_purchased),
         price_at_purchase, quantity_purchased, transaction_fees || 0, source || 'manual',
+        transaction_type || 'buy',
         req.user.id,
       ]
     );
@@ -139,7 +233,7 @@ router.put('/:id', async (req, res) => {
     const {
       asset_symbol, asset_name, asset_type,
       transaction_date, amount_invested, price_at_purchase,
-      quantity_purchased, transaction_fees,
+      quantity_purchased, transaction_fees, transaction_type,
     } = req.body;
 
     const result = await query(
@@ -152,14 +246,15 @@ router.put('/:id', async (req, res) => {
         price_at_purchase = COALESCE($6, price_at_purchase),
         quantity_purchased = COALESCE($7, quantity_purchased),
         transaction_fees = COALESCE($8, transaction_fees),
+        transaction_type = COALESCE($9, transaction_type),
         updated_at = CURRENT_TIMESTAMP
-       WHERE id = $9 AND user_id = $10
+       WHERE id = $10 AND user_id = $11
        RETURNING *`,
       [
         asset_symbol, asset_name, asset_type,
         transaction_date, amount_invested, price_at_purchase,
-        quantity_purchased, transaction_fees, req.params.id,
-        req.user.id,
+        quantity_purchased, transaction_fees, transaction_type,
+        req.params.id, req.user.id,
       ]
     );
 
