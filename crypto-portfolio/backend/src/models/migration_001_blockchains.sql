@@ -84,7 +84,7 @@ VALUES
 
   ('AVAX',  'Avalanche',        E'\u25B2', '^0x[a-fA-F0-9]{64}$',
     '^0x[a-fA-F0-9]{40}$',
-    false, 'AVAX', 'etherscan',   'https://api.snowtrace.io/api',                 'SNOWTRACE_API_KEY',   true, false),
+    false, 'AVAX', 'etherscan',   'https://api.snowscan.xyz/api',                 'SNOWSCAN_API_KEY',    true, false),
 
   ('DOT',   'Polkadot',         E'\u25CF', '^0x[a-fA-F0-9]{64}$',
     '^1[a-zA-Z0-9]{30,50}$',

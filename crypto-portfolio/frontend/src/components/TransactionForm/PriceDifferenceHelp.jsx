@@ -43,10 +43,10 @@ export default function PriceDifferenceHelp({ onClose }) {
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-lg w-full
+      <div className="bg-white dark:bg-slate-800 rounded-xl shadow-2xl max-w-lg w-full
                     max-h-[85vh] overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+        <div className="p-6 border-b border-gray-200 dark:border-slate-700">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-amber-100 dark:bg-amber-900/30 rounded-full
@@ -57,13 +57,13 @@ export default function PriceDifferenceHelp({ onClose }) {
                         d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z" />
                 </svg>
               </div>
-              <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">
+              <h3 className="text-lg font-bold text-gray-900 dark:text-slate-100">
                 Differences de prix - FAQ
               </h3>
             </div>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300
+              className="text-gray-400 hover:text-gray-600 dark:hover:text-slate-300
                        transition-colors"
             >
               <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" strokeWidth={2}
@@ -79,14 +79,14 @@ export default function PriceDifferenceHelp({ onClose }) {
         <div className="flex-1 overflow-y-auto p-6">
           <div className="space-y-3">
             {FAQ_ITEMS.map((item, index) => (
-              <div key={index} className="border border-gray-200 dark:border-gray-700 rounded-lg
+              <div key={index} className="border border-gray-200 dark:border-slate-700 rounded-lg
                                         overflow-hidden">
                 <button
                   onClick={() => setOpenIndex(openIndex === index ? -1 : index)}
                   className="w-full flex items-center justify-between p-4 text-left
-                           hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+                           hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors"
                 >
-                  <span className="font-medium text-sm text-gray-900 dark:text-gray-100 pr-4">
+                  <span className="font-medium text-sm text-gray-900 dark:text-slate-100 pr-4">
                     {item.question}
                   </span>
                   <svg className={`w-5 h-5 text-gray-400 flex-shrink-0 transition-transform
@@ -98,7 +98,7 @@ export default function PriceDifferenceHelp({ onClose }) {
                 </button>
                 {openIndex === index && (
                   <div className="px-4 pb-4">
-                    <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+                    <p className="text-sm text-gray-600 dark:text-slate-400 leading-relaxed">
                       {item.answer}
                     </p>
                   </div>
@@ -109,13 +109,13 @@ export default function PriceDifferenceHelp({ onClose }) {
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50
-                      dark:bg-gray-800/50">
+        <div className="p-4 border-t border-gray-200 dark:border-slate-700 bg-gray-50
+                      dark:bg-slate-800/50">
           <button
             onClick={onClose}
-            className="w-full py-2.5 px-4 bg-gray-200 dark:bg-gray-700
-                     text-gray-700 dark:text-gray-300 font-medium rounded-lg
-                     hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors text-sm"
+            className="w-full py-2.5 px-4 bg-gray-200 dark:bg-slate-700
+                     text-gray-700 dark:text-slate-300 font-medium rounded-lg
+                     hover:bg-gray-300 dark:hover:bg-slate-600 transition-colors text-sm"
           >
             Fermer
           </button>

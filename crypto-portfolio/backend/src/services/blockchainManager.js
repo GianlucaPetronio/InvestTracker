@@ -42,7 +42,7 @@ const FALLBACK_BLOCKCHAINS = [
   { symbol: 'AVAX', name: 'Avalanche', icon: '\u25b2', hash_pattern: '^0x[a-fA-F0-9]{64}$',
     address_pattern: '^0x[a-fA-F0-9]{40}$',
     needs_recipient_address: false, asset_symbol: 'AVAX', api_type: 'etherscan',
-    api_url: 'https://api.snowtrace.io/api', api_key_env_var: 'SNOWTRACE_API_KEY', is_active: true, is_custom: false },
+    api_url: 'https://api.snowscan.xyz/api', api_key_env_var: 'SNOWSCAN_API_KEY', is_active: true, is_custom: false },
   { symbol: 'DOT', name: 'Polkadot', icon: '\u25cf', hash_pattern: '^0x[a-fA-F0-9]{64}$',
     address_pattern: '^1[a-zA-Z0-9]{30,50}$',
     needs_recipient_address: false, asset_symbol: 'DOT', api_type: 'subscan',

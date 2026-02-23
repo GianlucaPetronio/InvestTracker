@@ -49,10 +49,10 @@ function PriceTicker() {
         className="w-5 h-5 rounded-full"
         onError={(e) => { e.target.style.display = 'none'; }}
       />
-      <span className="font-semibold text-gray-800 dark:text-gray-200 text-sm">
+      <span className="font-semibold text-gray-800 dark:text-slate-200 text-sm">
         {symbol}
       </span>
-      <span className="text-gray-600 dark:text-gray-300 text-sm">
+      <span className="text-gray-600 dark:text-slate-300 text-sm">
         {formatCurrency(data.price)}
       </span>
       <span className={`text-sm font-medium ${
@@ -66,7 +66,7 @@ function PriceTicker() {
   ));
 
   return (
-    <div className="relative overflow-hidden rounded-lg bg-white/70 dark:bg-gray-800/70 backdrop-blur border border-gray-200 dark:border-gray-700">
+    <div className="relative overflow-hidden rounded-lg bg-white/70 dark:bg-slate-800/70 backdrop-blur border border-gray-200 dark:border-slate-700">
       <style>{`
         @keyframes ticker-scroll {
           0% { transform: translateX(0); }

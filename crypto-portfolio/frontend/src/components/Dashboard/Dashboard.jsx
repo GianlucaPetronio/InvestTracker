@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { getPortfolioStats, getPortfolioAssets } from '../../services/api';
+import Button from '../ui/Button';
 import StatsCards from './StatsCards';
 import PortfolioChart from './PortfolioChart';
 import AssetEvolutionChart from './AssetEvolutionChart';
@@ -53,8 +54,8 @@ function Dashboard() {
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center h-80 gap-3">
-        <div className="w-8 h-8 border-3 border-indigo-600 dark:border-indigo-400 border-t-transparent rounded-full animate-spin" />
-        <p className="text-gray-500 dark:text-gray-400">Chargement du portfolio...</p>
+        <div className="w-8 h-8 border-3 border-blue-500 dark:border-purple-400 border-t-transparent rounded-full animate-spin" />
+        <p className="text-gray-500 dark:text-slate-400">Chargement du portfolio...</p>
       </div>
     );
   }
@@ -77,26 +78,23 @@ function Dashboard() {
   if (!stats || stats.totalInvested === 0) {
     return (
       <div className="text-center py-20">
-        <div className="w-16 h-16 bg-indigo-100 dark:bg-indigo-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-          <svg className="w-8 h-8 text-indigo-600 dark:text-indigo-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+        <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+          <svg className="w-8 h-8 text-blue-500 dark:text-purple-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
           </svg>
         </div>
-        <h2 className="text-2xl font-semibold text-gray-700 dark:text-gray-200 mb-2">
+        <h2 className="text-2xl font-semibold text-gray-700 dark:text-slate-200 mb-2">
           Votre portfolio est vide
         </h2>
-        <p className="text-gray-500 dark:text-gray-400 mb-6 max-w-md mx-auto">
+        <p className="text-gray-500 dark:text-slate-400 mb-6 max-w-md mx-auto">
           Ajoutez votre premiere transaction pour commencer a suivre vos investissements crypto et traditionnels.
         </p>
-        <Link
-          to="/add"
-          className="inline-flex items-center gap-2 bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors font-medium"
-        >
+        <Button as={Link} to="/add" size="lg">
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
           </svg>
           Ajouter une transaction
-        </Link>
+        </Button>
       </div>
     );
   }
@@ -122,16 +120,13 @@ function Dashboard() {
 
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Dashboard</h1>
-        <Link
-          to="/add"
-          className="inline-flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors text-sm font-medium"
-        >
+        <h1 className="text-2xl font-bold text-gray-800 dark:text-slate-100">Dashboard</h1>
+        <Button as={Link} to="/add" size="sm">
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
           </svg>
           Ajouter
-        </Link>
+        </Button>
       </div>
 
       {/* Bandeau defilant des prix */}

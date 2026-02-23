@@ -84,17 +84,17 @@ export default function EditTransactionModal({ transaction, onClose, onSaved }) 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={onClose}>
       <div
-        className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto"
+        className="bg-white dark:bg-slate-800 rounded-xl shadow-2xl border border-gray-200 dark:border-slate-700 w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto"
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-slate-700">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-slate-100">
             Modifier la transaction
           </h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+            className="text-gray-400 hover:text-gray-600 dark:hover:text-slate-300 transition-colors"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -113,21 +113,21 @@ export default function EditTransactionModal({ transaction, onClose, onSaved }) 
           {/* Symbole + Nom */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Symbole</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Symbole</label>
               <input
                 type="text"
                 value={form.asset_symbol}
                 onChange={e => handleChange('asset_symbol', e.target.value.toUpperCase())}
-                className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                className="w-full border border-gray-300 dark:border-slate-600 rounded-lg px-3 py-2 bg-white dark:bg-slate-700 text-gray-900 dark:text-slate-100 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nom</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Nom</label>
               <input
                 type="text"
                 value={form.asset_name}
                 onChange={e => handleChange('asset_name', e.target.value)}
-                className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                className="w-full border border-gray-300 dark:border-slate-600 rounded-lg px-3 py-2 bg-white dark:bg-slate-700 text-gray-900 dark:text-slate-100 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               />
             </div>
           </div>
@@ -135,22 +135,22 @@ export default function EditTransactionModal({ transaction, onClose, onSaved }) 
           {/* Type d'actif + Type de transaction */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Type d'actif</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Type d'actif</label>
               <select
                 value={form.asset_type}
                 onChange={e => handleChange('asset_type', e.target.value)}
-                className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                className="w-full border border-gray-300 dark:border-slate-600 rounded-lg px-3 py-2 bg-white dark:bg-slate-700 text-gray-900 dark:text-slate-100 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               >
                 <option value="crypto">Crypto</option>
                 <option value="traditional">Traditionnel</option>
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Achat / Vente</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Achat / Vente</label>
               <select
                 value={form.transaction_type}
                 onChange={e => handleChange('transaction_type', e.target.value)}
-                className={`w-full border rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-indigo-500 focus:border-transparent ${
+                className={`w-full border rounded-lg px-3 py-2 bg-white dark:bg-slate-700 text-gray-900 dark:text-slate-100 focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
                   form.transaction_type === 'sell'
                     ? 'border-red-300 dark:border-red-600'
                     : 'border-emerald-300 dark:border-emerald-600'
@@ -164,35 +164,35 @@ export default function EditTransactionModal({ transaction, onClose, onSaved }) 
 
           {/* Date */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Date</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Date</label>
             <input
               type="datetime-local"
               value={form.transaction_date}
               onChange={e => handleChange('transaction_date', e.target.value)}
-              className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              className="w-full border border-gray-300 dark:border-slate-600 rounded-lg px-3 py-2 bg-white dark:bg-slate-700 text-gray-900 dark:text-slate-100 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
             />
           </div>
 
           {/* Prix + Quantite */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Prix unitaire (EUR)</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Prix unitaire (EUR)</label>
               <input
                 type="number"
                 step="any"
                 value={form.price_at_purchase}
                 onChange={e => handleChange('price_at_purchase', e.target.value)}
-                className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                className="w-full border border-gray-300 dark:border-slate-600 rounded-lg px-3 py-2 bg-white dark:bg-slate-700 text-gray-900 dark:text-slate-100 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Quantite</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Quantite</label>
               <input
                 type="number"
                 step="any"
                 value={form.quantity_purchased}
                 onChange={e => handleChange('quantity_purchased', e.target.value)}
-                className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                className="w-full border border-gray-300 dark:border-slate-600 rounded-lg px-3 py-2 bg-white dark:bg-slate-700 text-gray-900 dark:text-slate-100 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               />
             </div>
           </div>
@@ -200,24 +200,24 @@ export default function EditTransactionModal({ transaction, onClose, onSaved }) 
           {/* Montant + Frais */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Montant investi (EUR)</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Montant investi (EUR)</label>
               <input
                 type="number"
                 step="any"
                 value={form.amount_invested}
                 onChange={e => handleChange('amount_invested', e.target.value)}
-                className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                className="w-full border border-gray-300 dark:border-slate-600 rounded-lg px-3 py-2 bg-gray-50 dark:bg-slate-700 text-gray-900 dark:text-slate-100 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               />
-              <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">Auto-calcule depuis prix x quantite</p>
+              <p className="mt-1 text-xs text-gray-400 dark:text-slate-500">Auto-calcule depuis prix x quantite</p>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Frais</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Frais</label>
               <input
                 type="number"
                 step="any"
                 value={form.transaction_fees}
                 onChange={e => handleChange('transaction_fees', e.target.value)}
-                className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                className="w-full border border-gray-300 dark:border-slate-600 rounded-lg px-3 py-2 bg-white dark:bg-slate-700 text-gray-900 dark:text-slate-100 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               />
             </div>
           </div>
@@ -227,14 +227,14 @@ export default function EditTransactionModal({ transaction, onClose, onSaved }) 
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-2.5 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors font-medium"
+              className="flex-1 px-4 py-2.5 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-slate-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors font-medium"
             >
               Annuler
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 px-4 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 px-4 py-2.5 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:from-blue-600 hover:to-purple-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? 'Enregistrement...' : 'Enregistrer'}
             </button>

@@ -60,9 +60,9 @@ function PortfolioChart() {
   function CustomTooltip({ active, payload, label }) {
     if (!active || !payload?.length) return null;
     return (
-      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg p-3">
-        <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">{label}</p>
-        <p className="text-sm font-semibold text-indigo-600 dark:text-indigo-400">
+      <div className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-600 rounded-lg shadow-lg p-3">
+        <p className="text-sm text-gray-500 dark:text-slate-400 mb-1">{label}</p>
+        <p className="text-sm font-semibold text-indigo-600 dark:text-purple-400">
           {formatCurrency(payload[0].value)}
         </p>
       </div>
@@ -70,20 +70,20 @@ function PortfolioChart() {
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 transition-colors">
+    <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-6 transition-colors">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100">
+        <h2 className="text-lg font-semibold text-gray-800 dark:text-slate-100">
           Evolution du portfolio
         </h2>
-        <div className="flex gap-1 bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
+        <div className="flex gap-1 bg-gray-100 dark:bg-slate-700 rounded-lg p-1">
           {PERIODS.map(p => (
             <button
               key={p.key}
               onClick={() => setPeriod(p.key)}
               className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
                 period === p.key
-                  ? 'bg-white dark:bg-gray-600 text-indigo-700 dark:text-indigo-300 shadow-sm'
-                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+                  ? 'bg-white dark:bg-slate-600 text-indigo-700 dark:text-purple-300 shadow-sm'
+                  : 'text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200'
               }`}
             >
               {p.label}
@@ -93,11 +93,11 @@ function PortfolioChart() {
       </div>
 
       {loading ? (
-        <div className="h-72 flex items-center justify-center text-gray-400 dark:text-gray-500">
+        <div className="h-72 flex items-center justify-center text-gray-400 dark:text-slate-500">
           Chargement...
         </div>
       ) : data.length === 0 ? (
-        <div className="h-72 flex items-center justify-center text-gray-400 dark:text-gray-500">
+        <div className="h-72 flex items-center justify-center text-gray-400 dark:text-slate-500">
           Pas assez de donnees pour afficher le graphique
         </div>
       ) : (

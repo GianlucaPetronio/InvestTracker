@@ -27,7 +27,9 @@
       "Bash(docker ps:*)",
       "Bash(cmd /c \"docker ps 2>nul\")",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(npx vite build)",
+      "Bash(del \"Q:\\\\Gianluca_Perso\\\\InvestTracker\\\\crypto-portfolio\\\\backend\\\\test_bigint.js\")"
     ]
   }
 }

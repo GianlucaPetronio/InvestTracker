@@ -70,16 +70,16 @@ function StatsCards({ stats }) {
       {cards.map((card) => (
         <div
           key={card.label}
-          className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-5 hover:shadow-md transition-shadow"
+          className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-5 hover:shadow-md transition-shadow"
         >
           <div className="flex items-center justify-between mb-3">
-            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{card.label}</p>
+            <p className="text-sm font-medium text-gray-500 dark:text-slate-400">{card.label}</p>
             <div className={`p-2 rounded-lg ${card.iconBg} ${card.iconColor}`}>
               {card.icon}
             </div>
           </div>
           <div className="flex items-end gap-2">
-            <p className={`text-2xl font-bold ${card.valueColor || 'text-gray-900 dark:text-gray-100'}`}>
+            <p className={`text-2xl font-bold ${card.valueColor || 'text-gray-900 dark:text-slate-100'}`}>
               {card.value}
             </p>
             {card.arrow && (
@@ -89,12 +89,12 @@ function StatsCards({ stats }) {
             )}
           </div>
           {card.subValue && (
-            <p className={`text-sm mt-1 ${card.valueColor || 'text-gray-500 dark:text-gray-400'}`}>
+            <p className={`text-sm mt-1 ${card.valueColor || 'text-gray-500 dark:text-slate-400'}`}>
               {card.subValue}
             </p>
           )}
           {card.subText && (
-            <p className="text-sm mt-1 text-gray-500 dark:text-gray-400">
+            <p className="text-sm mt-1 text-gray-500 dark:text-slate-400">
               {card.subText}
             </p>
           )}

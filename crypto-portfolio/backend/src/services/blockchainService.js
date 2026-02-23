@@ -183,6 +183,17 @@ async function getSolanaTxDetails(txHash, blockchainConfig, recipientAddress = n
 // ---------------------------------------------------------------------------
 // Handler generique Etherscan-like (ETH, BSC, MATIC, ARB, OP, AVAX, etc.)
 // ---------------------------------------------------------------------------
+
+// Conversion hex wei → nombre decimal (ETH/BNB/AVAX) sans perte de precision.
+// parseInt() depasse Number.MAX_SAFE_INTEGER des ~0.009 ETH, BigInt est requis.
+function hexWeiToEth(hexValue) {
+  if (!hexValue || hexValue === '0x0' || hexValue === '0x') return 0;
+  const wei = BigInt(hexValue);
+  // Diviser en deux etapes (wei→gwei→eth) pour garder la precision
+  const gwei = Number(wei / 1000000000n);
+  return gwei / 1e9;
+}
+
 async function getEtherscanLikeTxDetails(txHash, blockchainConfig, apiKey, recipientAddress = null) {
   const baseUrl = blockchainConfig.api_url;
   const symbol = blockchainConfig.symbol;
@@ -198,8 +209,11 @@ async function getEtherscanLikeTxDetails(txHash, blockchainConfig, apiKey, recip
     });
 
     const tx = txResponse.data.result;
-    if (!tx) {
-      throw new Error(`Transaction ${symbol} non trouvee`);
+    // Valider que result est un objet transaction et non une string d'erreur
+    // (ex: "Missing/Invalid API Key", "Max rate limit reached", API deprecee)
+    if (!tx || typeof tx === 'string') {
+      const hint = typeof tx === 'string' ? ` (${tx})` : '';
+      throw new Error(`Transaction ${symbol} non trouvee${hint}`);
     }
 
     if (recipientAddress) {
@@ -210,7 +224,8 @@ async function getEtherscanLikeTxDetails(txHash, blockchainConfig, apiKey, recip
       }
     }
 
-    const receiptResponse = await axios.get(baseUrl, {
+    // Lancer receipt et block en parallele pour reduire le risque de rate limit
+    const receiptPromise = axios.get(baseUrl, {
       params: {
         module: 'proxy',
         action: 'eth_getTransactionReceipt',
@@ -219,27 +234,46 @@ async function getEtherscanLikeTxDetails(txHash, blockchainConfig, apiKey, recip
       },
     });
 
-    const receipt = receiptResponse.data.result;
+    const blockPromise = tx.blockNumber
+      ? axios.get(baseUrl, {
+          params: {
+            module: 'proxy',
+            action: 'eth_getBlockByNumber',
+            tag: tx.blockNumber,
+            boolean: 'false',
+            apikey: apiKey || '',
+          },
+        })
+      : Promise.resolve(null);
 
-    const valueWei = parseInt(tx.value, 16);
-    const value = valueWei / 1e18;
-    const gasUsed = receipt ? parseInt(receipt.gasUsed, 16) : 0;
-    const gasPrice = parseInt(tx.gasPrice, 16);
-    const fees = (gasUsed * gasPrice) / 1e18;
+    const [receiptResponse, blockResponse] = await Promise.all([receiptPromise, blockPromise]);
+
+    const receipt = receiptResponse.data.result;
+    // Ignorer le receipt si c'est une string d'erreur (rate limit)
+    const validReceipt = receipt && typeof receipt !== 'string' ? receipt : null;
+
+    // Quantite : conversion hex wei → ETH/BNB/AVAX via BigInt
+    const value = hexWeiToEth(tx.value);
+
+    // Frais : utiliser effectiveGasPrice du receipt (EIP-1559) avec fallback sur tx.gasPrice
+    let fees = 0;
+    if (validReceipt && validReceipt.gasUsed) {
+      const gasUsedBig = BigInt(validReceipt.gasUsed);
+      const gasPriceBig = validReceipt.effectiveGasPrice
+        ? BigInt(validReceipt.effectiveGasPrice)
+        : BigInt(tx.gasPrice || '0x0');
+      fees = Number(gasUsedBig * gasPriceBig / 1000000000n) / 1e9;
+    } else if (tx.gasPrice && tx.gas) {
+      // Fallback : estimer les frais depuis la tx elle-meme si le receipt n'est pas dispo
+      const gasLimitBig = BigInt(tx.gas);
+      const gasPriceBig = BigInt(tx.gasPrice);
+      fees = Number(gasLimitBig * gasPriceBig / 1000000000n) / 1e9;
+    }
 
     let timestamp = null;
-    if (tx.blockNumber) {
-      const blockResponse = await axios.get(baseUrl, {
-        params: {
-          module: 'proxy',
-          action: 'eth_getBlockByNumber',
-          tag: tx.blockNumber,
-          boolean: 'false',
-          apikey: apiKey || '',
-        },
-      });
+    if (blockResponse) {
       const block = blockResponse.data.result;
-      if (block) {
+      if (block && typeof block !== 'string' && block.timestamp) {
         timestamp = new Date(parseInt(block.timestamp, 16) * 1000).toISOString();
       }
     }
@@ -248,7 +282,9 @@ async function getEtherscanLikeTxDetails(txHash, blockchainConfig, apiKey, recip
       hash: tx.hash,
       blockchain: symbol,
       timestamp,
-      confirmations: receipt?.status === '0x1' ? 'confirmee' : 'echouee',
+      confirmations: validReceipt?.status === '0x1' ? 'confirmee'
+        : validReceipt?.status === '0x0' ? 'echouee'
+        : 'inconnue',
       blockHeight: tx.blockNumber ? parseInt(tx.blockNumber, 16) : null,
       from: tx.from,
       to: tx.to,
@@ -832,14 +868,14 @@ async function getTransactionOutputAddresses(txHash, blockchain) {
         },
       });
       const tx = txResponse.data.result;
-      if (!tx) {
-        return { success: false, error: 'Transaction non trouvee' };
+      if (!tx || typeof tx === 'string') {
+        return { success: false, error: typeof tx === 'string' ? tx : 'Transaction non trouvee' };
       }
       return {
         success: true,
         addresses: [{
           address: tx.to,
-          amount: parseInt(tx.value, 16) / 1e18,
+          amount: hexWeiToEth(tx.value),
         }],
       };
     }

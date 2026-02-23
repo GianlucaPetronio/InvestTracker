@@ -138,17 +138,17 @@ function AssetEvolutionChart({ assets = [] }) {
   function CustomTooltip({ active, payload, label }) {
     if (!active || !payload?.length) return null;
     return (
-      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg p-3 min-w-[160px]">
-        <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+      <div className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-600 rounded-lg shadow-lg p-3 min-w-[160px]">
+        <p className="text-xs text-gray-500 dark:text-slate-400 mb-2">
           {new Date(label).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })}
         </p>
         {payload.map(entry => (
           <div key={entry.dataKey} className="flex items-center justify-between gap-4 py-0.5">
             <div className="flex items-center gap-1.5">
               <span className="w-2.5 h-2.5 rounded-full inline-block" style={{ backgroundColor: entry.color }} />
-              <span className="text-sm text-gray-700 dark:text-gray-300">{entry.dataKey}</span>
+              <span className="text-sm text-gray-700 dark:text-slate-300">{entry.dataKey}</span>
             </div>
-            <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+            <span className="text-sm font-semibold text-gray-900 dark:text-slate-100">
               {formatCurrency(entry.value)}
             </span>
           </div>
@@ -160,21 +160,21 @@ function AssetEvolutionChart({ assets = [] }) {
   if (assets.length === 0) return null;
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 transition-colors">
+    <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-6 transition-colors">
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-5 gap-3">
-        <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100">
+        <h2 className="text-lg font-semibold text-gray-800 dark:text-slate-100">
           Evolution par actif
         </h2>
-        <div className="flex gap-1 bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
+        <div className="flex gap-1 bg-gray-100 dark:bg-slate-700 rounded-lg p-1">
           {PERIODS.map(p => (
             <button
               key={p.key}
               onClick={() => setPeriod(p.key)}
               className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
                 period === p.key
-                  ? 'bg-white dark:bg-gray-600 text-indigo-700 dark:text-indigo-300 shadow-sm'
-                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+                  ? 'bg-white dark:bg-slate-600 text-indigo-700 dark:text-purple-300 shadow-sm'
+                  : 'text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200'
               }`}
             >
               {p.label}
@@ -186,13 +186,13 @@ function AssetEvolutionChart({ assets = [] }) {
       {/* Asset selector */}
       <div className="mb-5">
         <div className="flex items-center gap-2 mb-3">
-          <p className="text-sm text-gray-500 dark:text-gray-400">
+          <p className="text-sm text-gray-500 dark:text-slate-400">
             Actifs a comparer :
           </p>
           {availableSymbols.length > 2 && (
             <button
               onClick={selectAll}
-              className="text-xs text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 font-medium"
+              className="text-xs text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 font-medium"
             >
               Tout selectionner
             </button>
@@ -226,14 +226,14 @@ function AssetEvolutionChart({ assets = [] }) {
 
       {/* Chart */}
       {loading ? (
-        <div className="h-80 flex items-center justify-center text-gray-400 dark:text-gray-500">
+        <div className="h-80 flex items-center justify-center text-gray-400 dark:text-slate-500">
           <div className="flex flex-col items-center gap-2">
             <div className="w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
             <span className="text-sm">Chargement...</span>
           </div>
         </div>
       ) : chartData.length === 0 ? (
-        <div className="h-80 flex items-center justify-center text-gray-400 dark:text-gray-500">
+        <div className="h-80 flex items-center justify-center text-gray-400 dark:text-slate-500">
           Pas assez de donnees pour afficher le graphique
         </div>
       ) : (
@@ -266,7 +266,7 @@ function AssetEvolutionChart({ assets = [] }) {
               iconType="circle"
               iconSize={8}
               formatter={(value) => (
-                <span className="text-sm text-gray-600 dark:text-gray-300">{value}</span>
+                <span className="text-sm text-gray-600 dark:text-slate-300">{value}</span>
               )}
             />
             {selected.map((symbol, index) => (
@@ -292,7 +292,7 @@ function AssetEvolutionChart({ assets = [] }) {
 
       {/* Bottom legend cards */}
       {selected.length > 0 && chartData.length > 0 && (
-        <div className="mt-5 pt-5 border-t border-gray-100 dark:border-gray-700">
+        <div className="mt-5 pt-5 border-t border-gray-100 dark:border-slate-700">
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
             {selected.map((symbol, index) => {
               const asset = assets.find(a => a.symbol === symbol);
@@ -301,17 +301,17 @@ function AssetEvolutionChart({ assets = [] }) {
               return (
                 <div
                   key={symbol}
-                  className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-700/40"
+                  className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-slate-700/40"
                 >
                   <div
                     className="w-3 h-3 rounded-full flex-shrink-0"
                     style={{ backgroundColor: getColor(symbol, index) }}
                   />
                   <div className="min-w-0">
-                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+                    <p className="text-sm font-medium text-gray-900 dark:text-slate-100 truncate">
                       {assetNames[symbol] || asset?.name || symbol}
                     </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                    <p className="text-xs text-gray-500 dark:text-slate-400">
                       {formatCurrency(currentVal)}
                     </p>
                   </div>

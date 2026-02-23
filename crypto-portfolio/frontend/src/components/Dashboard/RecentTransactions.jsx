@@ -42,8 +42,8 @@ const SOURCE_BADGE = {
     label: 'Chain',
   },
   manual: {
-    bg: 'bg-gray-100 dark:bg-gray-700',
-    text: 'text-gray-600 dark:text-gray-300',
+    bg: 'bg-gray-100 dark:bg-slate-700',
+    text: 'text-gray-600 dark:text-slate-300',
     label: 'Manuel',
   },
 };
@@ -74,23 +74,23 @@ function RecentTransactions() {
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 transition-colors">
+    <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-6 transition-colors">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100">
+        <h2 className="text-lg font-semibold text-gray-800 dark:text-slate-100">
           Transactions recentes
         </h2>
         <Link
           to="/history"
-          className="text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 font-medium transition-colors"
+          className="text-sm text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 font-medium transition-colors"
         >
           Voir tout &rarr;
         </Link>
       </div>
 
       {loading ? (
-        <div className="py-8 text-center text-gray-400 dark:text-gray-500">Chargement...</div>
+        <div className="py-8 text-center text-gray-400 dark:text-slate-500">Chargement...</div>
       ) : transactions.length === 0 ? (
-        <div className="py-8 text-center text-gray-400 dark:text-gray-500">
+        <div className="py-8 text-center text-gray-400 dark:text-slate-500">
           Aucune transaction
         </div>
       ) : (
@@ -101,10 +101,10 @@ function RecentTransactions() {
             return (
               <div
                 key={tx.id}
-                className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors group"
+                className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors group"
               >
                 {/* Logo actif */}
-                <div className="w-10 h-10 rounded-full flex items-center justify-center overflow-hidden bg-gray-100 dark:bg-gray-700 flex-shrink-0">
+                <div className="w-10 h-10 rounded-full flex items-center justify-center overflow-hidden bg-gray-100 dark:bg-slate-700 flex-shrink-0">
                   <img
                     src={getLogoUrl(tx.asset_symbol)}
                     alt={tx.asset_symbol}
@@ -129,30 +129,30 @@ function RecentTransactions() {
                 {/* Info */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <p className="font-semibold text-gray-900 dark:text-gray-100 text-sm">
+                    <p className="font-semibold text-gray-900 dark:text-slate-100 text-sm">
                       {tx.asset_symbol}
                     </p>
                     <span className={`text-xs px-1.5 py-0.5 rounded ${badge.bg} ${badge.text}`}>
                       {badge.label}
                     </span>
                   </div>
-                  <p className="text-xs text-gray-400 dark:text-gray-500 truncate">
+                  <p className="text-xs text-gray-400 dark:text-slate-500 truncate">
                     {formatQuantity(parseFloat(tx.quantity_purchased))} unites
                     {fees > 0 && (
-                      <span className="text-gray-300 dark:text-gray-600"> | frais {formatCurrency(fees)}</span>
+                      <span className="text-gray-300 dark:text-slate-600"> | frais {formatCurrency(fees)}</span>
                     )}
                   </p>
                 </div>
 
                 {/* Montant et date */}
                 <div className="text-right">
-                  <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                  <p className="text-sm font-semibold text-gray-900 dark:text-slate-100">
                     {tx.amount_invested
                       ? formatCurrency(parseFloat(tx.amount_invested))
                       : '-'
                     }
                   </p>
-                  <p className="text-xs text-gray-400 dark:text-gray-500">
+                  <p className="text-xs text-gray-400 dark:text-slate-500">
                     {timeAgo(tx.transaction_date)}
                   </p>
                 </div>
@@ -160,7 +160,7 @@ function RecentTransactions() {
                 {/* Bouton modifier */}
                 <button
                   onClick={() => setEditingTx(tx)}
-                  className="opacity-0 group-hover:opacity-100 text-indigo-500 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 transition-all p-1.5 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-900/20"
+                  className="opacity-0 group-hover:opacity-100 text-purple-500 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300 transition-all p-1.5 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-900/20"
                   title="Modifier"
                 >
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">

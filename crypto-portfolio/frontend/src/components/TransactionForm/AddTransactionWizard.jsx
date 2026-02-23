@@ -6,6 +6,8 @@ import BlockchainHashInput from './BlockchainHashInput';
 import ManualInput from './ManualInput';
 import TransactionPreview from './TransactionPreview';
 import LedgerGuide from './LedgerGuide';
+import Button from '../ui/Button';
+import Card from '../ui/Card';
 import api, { createTransaction, createTransactionsBulk } from '../../services/api';
 import { formatCurrency, formatQuantity } from '../../utils/calculations';
 
@@ -296,8 +298,7 @@ export default function AddTransactionWizard() {
   if (successData) {
     return (
       <div className="max-w-3xl mx-auto">
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 border border-gray-200
-                      dark:border-gray-700 mt-8">
+        <Card className="mt-8">
           <div className="text-center space-y-6">
             {/* Success icon */}
             <div className="mx-auto w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-900/30
@@ -307,11 +308,11 @@ export default function AddTransactionWizard() {
               </svg>
             </div>
 
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-slate-100">
               {successData.count > 1 ? 'Transactions ajoutees !' : 'Transaction ajoutee !'}
             </h2>
 
-            <p className="text-gray-600 dark:text-gray-400">
+            <p className="text-gray-600 dark:text-slate-400">
               {successData.count > 1
                 ? `${successData.count} transactions ${successData.symbol} enregistrees avec succes.`
                 : `${successData.quantity} ${successData.symbol} enregistre avec succes.`
@@ -319,28 +320,19 @@ export default function AddTransactionWizard() {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
-              <button
-                onClick={resetWizard}
-                className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white
-                         font-semibold rounded-lg transition-colors flex items-center justify-center gap-2"
-              >
+              <Button onClick={resetWizard} size="lg">
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                 </svg>
                 Ajouter une autre transaction
-              </button>
+              </Button>
 
-              <button
-                onClick={() => navigate('/')}
-                className="px-6 py-3 border border-gray-300 dark:border-gray-600 text-gray-700
-                         dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700
-                         font-semibold rounded-lg transition-colors"
-              >
+              <Button variant="secondary" size="lg" onClick={() => navigate('/')}>
                 Retour au dashboard
-              </button>
+              </Button>
             </div>
           </div>
-        </div>
+        </Card>
       </div>
     );
   }
@@ -360,23 +352,23 @@ export default function AddTransactionWizard() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-slate-100 mb-2">
             {multiTxResults.length} transactions trouvees
           </h2>
-          <p className="text-gray-600 dark:text-gray-400">
+          <p className="text-gray-600 dark:text-slate-400">
             Verifiez le resume avant de confirmer
           </p>
         </div>
 
         {/* Transactions table */}
-        <div className="bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/20
-                      dark:to-purple-900/20 rounded-xl p-6 border border-indigo-200
-                      dark:border-indigo-800">
+        <div className="bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20
+                      dark:to-purple-900/20 rounded-xl p-6 border border-purple-200
+                      dark:border-purple-800">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-left text-gray-600 dark:text-gray-400 border-b border-indigo-200
-                             dark:border-indigo-700">
+                <tr className="text-left text-gray-600 dark:text-slate-400 border-b border-purple-200
+                             dark:border-purple-700">
                   <th className="pb-3 pr-4 font-medium">#</th>
                   <th className="pb-3 pr-4 font-medium">Symbole</th>
                   <th className="pb-3 pr-4 font-medium">Date</th>
@@ -388,44 +380,44 @@ export default function AddTransactionWizard() {
               </thead>
               <tbody>
                 {multiTxResults.map((tx, i) => (
-                  <tr key={i} className="border-b border-indigo-100 dark:border-indigo-800/50">
-                    <td className="py-3 pr-4 text-gray-400 dark:text-gray-500 font-mono text-xs">
+                  <tr key={i} className="border-b border-purple-100 dark:border-purple-800/50">
+                    <td className="py-3 pr-4 text-gray-400 dark:text-slate-500 font-mono text-xs">
                       {i + 1}
                     </td>
-                    <td className="py-3 pr-4 font-semibold text-gray-900 dark:text-gray-100">
+                    <td className="py-3 pr-4 font-semibold text-gray-900 dark:text-slate-100">
                       {tx.assetSymbol}
                     </td>
-                    <td className="py-3 pr-4 text-gray-700 dark:text-gray-300 whitespace-nowrap">
+                    <td className="py-3 pr-4 text-gray-700 dark:text-slate-300 whitespace-nowrap">
                       {new Date(tx.date).toLocaleDateString('fr-FR')}
                     </td>
-                    <td className="py-3 pr-4 text-right font-mono text-gray-900 dark:text-gray-100">
+                    <td className="py-3 pr-4 text-right font-mono text-gray-900 dark:text-slate-100">
                       {tx.quantity != null ? formatQuantity(parseFloat(tx.quantity)) : '-'}
                     </td>
-                    <td className="py-3 pr-4 text-right text-gray-700 dark:text-gray-300">
+                    <td className="py-3 pr-4 text-right text-gray-700 dark:text-slate-300">
                       {tx.price != null ? formatCurrency(parseFloat(tx.price)) : '-'}
                     </td>
-                    <td className="py-3 pr-4 text-right text-gray-500 dark:text-gray-400">
+                    <td className="py-3 pr-4 text-right text-gray-500 dark:text-slate-400">
                       {formatCurrency(parseFloat(tx.fees || 0))}
                     </td>
-                    <td className="py-3 text-right font-semibold text-gray-900 dark:text-gray-100">
+                    <td className="py-3 text-right font-semibold text-gray-900 dark:text-slate-100">
                       {formatCurrency(parseFloat(tx.amountPaid || tx.amount || 0))}
                     </td>
                   </tr>
                 ))}
               </tbody>
               <tfoot>
-                <tr className="border-t-2 border-indigo-300 dark:border-indigo-600 font-bold">
-                  <td colSpan={3} className="pt-4 text-gray-900 dark:text-gray-100">
+                <tr className="border-t-2 border-purple-300 dark:border-purple-600 font-bold">
+                  <td colSpan={3} className="pt-4 text-gray-900 dark:text-slate-100">
                     Total
                   </td>
-                  <td className="pt-4 text-right font-mono text-gray-900 dark:text-gray-100">
+                  <td className="pt-4 text-right font-mono text-gray-900 dark:text-slate-100">
                     {formatQuantity(totalQuantity)}
                   </td>
                   <td className="pt-4"></td>
-                  <td className="pt-4 text-right text-gray-500 dark:text-gray-400">
+                  <td className="pt-4 text-right text-gray-500 dark:text-slate-400">
                     {formatCurrency(totalFees)}
                   </td>
-                  <td className="pt-4 text-right text-indigo-600 dark:text-indigo-400 text-base">
+                  <td className="pt-4 text-right text-purple-600 dark:text-purple-400 text-base">
                     {formatCurrency(totalAmount)}
                   </td>
                 </tr>
@@ -435,13 +427,13 @@ export default function AddTransactionWizard() {
         </div>
 
         {/* Hashes */}
-        <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-          <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <div className="bg-gray-50 dark:bg-slate-800/50 rounded-lg p-4 border border-gray-200 dark:border-slate-700">
+          <p className="text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">
             Hashes de transaction
           </p>
           <div className="space-y-1">
             {multiTxResults.map((tx, i) => (
-              <p key={i} className="font-mono text-xs text-gray-500 dark:text-gray-400 break-all">
+              <p key={i} className="font-mono text-xs text-gray-500 dark:text-slate-400 break-all">
                 {i + 1}. {tx.txHash}
               </p>
             ))}
@@ -450,23 +442,22 @@ export default function AddTransactionWizard() {
 
         {/* Action Buttons */}
         <div className="flex gap-4">
-          <button
+          <Button
+            variant="secondary"
+            size="lg"
             onClick={handleBack}
             disabled={loading}
-            className="flex-1 py-3 px-6 border-2 border-gray-300 dark:border-gray-600
-                     text-gray-700 dark:text-gray-300 font-semibold rounded-lg
-                     hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors
-                     disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex-1"
           >
             &larr; Modifier
-          </button>
+          </Button>
 
           <button
             onClick={handleConfirmMulti}
             disabled={loading}
             className="flex-1 py-3 px-6 bg-green-600 hover:bg-green-700 text-white
                      font-semibold rounded-lg transition-colors
-                     disabled:bg-gray-300 dark:disabled:bg-gray-700 disabled:cursor-not-allowed
+                     disabled:bg-gray-300 dark:disabled:bg-slate-700 disabled:cursor-not-allowed
                      flex items-center justify-center gap-2"
           >
             {loading ? (
@@ -495,8 +486,8 @@ export default function AddTransactionWizard() {
       <div className="mb-8">
         <button
           onClick={handleBack}
-          className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900
-                   dark:hover:text-gray-200 mb-4 flex items-center gap-2 transition-colors"
+          className="text-sm text-gray-600 dark:text-slate-400 hover:text-gray-900
+                   dark:hover:text-slate-200 mb-4 flex items-center gap-2 transition-colors"
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
@@ -504,7 +495,7 @@ export default function AddTransactionWizard() {
           {currentStep === 1 ? 'Retour au dashboard' : "Retour a l'etape precedente"}
         </button>
 
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-slate-100">
           Ajouter une transaction
         </h1>
       </div>
@@ -513,8 +504,7 @@ export default function AddTransactionWizard() {
       <StepIndicator steps={steps} currentStep={currentStep} />
 
       {/* Main Content Card */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 border border-gray-200
-                    dark:border-gray-700 mt-8">
+      <Card className="mt-8">
 
         {/* Error Message */}
         {error && (
@@ -530,17 +520,17 @@ export default function AddTransactionWizard() {
 
         {/* Validation Progress */}
         {validationProgress && (
-          <div className="mb-6 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200
-                        dark:border-indigo-800 px-4 py-3 rounded-lg">
+          <div className="mb-6 bg-purple-50 dark:bg-purple-900/20 border border-purple-200
+                        dark:border-purple-800 px-4 py-3 rounded-lg">
             <div className="flex items-center gap-3">
-              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-indigo-500" />
-              <span className="text-indigo-700 dark:text-indigo-300 text-sm">
+              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-purple-500" />
+              <span className="text-purple-700 dark:text-purple-300 text-sm">
                 Validation du hash {validationProgress.current}/{validationProgress.total}...
               </span>
             </div>
-            <div className="mt-2 bg-indigo-200 dark:bg-indigo-800 rounded-full h-2">
+            <div className="mt-2 bg-purple-200 dark:bg-purple-800 rounded-full h-2">
               <div
-                className="bg-indigo-600 dark:bg-indigo-400 h-2 rounded-full transition-all"
+                className="bg-purple-600 dark:bg-purple-400 h-2 rounded-full transition-all"
                 style={{ width: `${(validationProgress.current / validationProgress.total) * 100}%` }}
               />
             </div>
@@ -592,7 +582,7 @@ export default function AddTransactionWizard() {
             transactionType={buyOrSell}
           />
         )}
-      </div>
+      </Card>
 
       {/* Ledger Guide Modal */}
       {showLedgerGuide && (

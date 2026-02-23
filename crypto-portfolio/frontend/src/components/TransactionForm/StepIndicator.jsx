@@ -10,7 +10,7 @@ export default function StepIndicator({ steps, currentStep }) {
                 transition-all duration-300
                 ${currentStep >= step.number
                   ? 'bg-indigo-600 text-white'
-                  : 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400'
+                  : 'bg-gray-200 dark:bg-slate-700 text-gray-500 dark:text-slate-400'
                 }`}
             >
               {currentStep > step.number ? (
@@ -21,8 +21,8 @@ export default function StepIndicator({ steps, currentStep }) {
             </div>
             <span className={`mt-2 text-sm font-medium
               ${currentStep >= step.number
-                ? 'text-indigo-600 dark:text-indigo-400'
-                : 'text-gray-500 dark:text-gray-400'
+                ? 'text-purple-600 dark:text-purple-400'
+                : 'text-gray-500 dark:text-slate-400'
               }`}>
               {step.title}
             </span>
@@ -34,7 +34,7 @@ export default function StepIndicator({ steps, currentStep }) {
               className={`flex-1 h-1 mx-4 rounded transition-all duration-300
                 ${currentStep > step.number
                   ? 'bg-indigo-600'
-                  : 'bg-gray-200 dark:bg-gray-700'
+                  : 'bg-gray-200 dark:bg-slate-700'
                 }`}
             />
           )}

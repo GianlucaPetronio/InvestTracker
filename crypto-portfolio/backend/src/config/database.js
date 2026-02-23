@@ -88,6 +88,15 @@ async function initDatabase() {
 
     await pool.query('CREATE INDEX IF NOT EXISTS idx_transactions_user ON transactions(user_id)');
 
+    // Fix AVAX API URL (SnowTrace deprecie -> SnowScan)
+    await pool.query(`
+      UPDATE blockchains
+      SET api_url = 'https://api.snowscan.xyz/api',
+          api_key_env_var = 'SNOWSCAN_API_KEY',
+          updated_at = CURRENT_TIMESTAMP
+      WHERE symbol = 'AVAX' AND api_url = 'https://api.snowtrace.io/api'
+    `).catch(() => { /* table blockchains pas encore creee */ });
+
     console.log('[DB] Tables initialisees');
   } catch (error) {
     console.error('[DB] Erreur initialisation tables:', error.message);

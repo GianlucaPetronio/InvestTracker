@@ -97,10 +97,10 @@ export default function TransactionPreview({ data, txDetails, onConfirm, onEdit,
             <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
         </div>
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-slate-100 mb-2">
           Verifiez les informations
         </h2>
-        <p className="text-gray-600 dark:text-gray-400">
+        <p className="text-gray-600 dark:text-slate-400">
           Assurez-vous que toutes les donnees sont correctes avant de confirmer
         </p>
       </div>
@@ -114,13 +114,13 @@ export default function TransactionPreview({ data, txDetails, onConfirm, onEdit,
         <div className="flex items-center justify-between mb-6 pb-6 border-b border-indigo-200
                       dark:border-indigo-800">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-white dark:bg-gray-800 rounded-full flex items-center
+            <div className="w-12 h-12 bg-white dark:bg-slate-800 rounded-full flex items-center
                           justify-center text-2xl shadow-sm">
               {getCryptoIcon(data.assetSymbol)}
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                <h3 className="text-2xl font-bold text-gray-900 dark:text-slate-100">
                   {data.assetSymbol}
                 </h3>
                 <span className={`px-2.5 py-0.5 text-xs font-bold rounded-full ${
@@ -131,7 +131,7 @@ export default function TransactionPreview({ data, txDetails, onConfirm, onEdit,
                   {isSell ? 'Vente' : 'Achat'}
                 </span>
               </div>
-              <p className="text-gray-600 dark:text-gray-400">
+              <p className="text-gray-600 dark:text-slate-400">
                 {data.assetName || data.blockchain || data.assetSymbol}
               </p>
             </div>
@@ -168,9 +168,9 @@ export default function TransactionPreview({ data, txDetails, onConfirm, onEdit,
               <button
                 type="button"
                 onClick={handleCancelEdit}
-                className="px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300
-                         bg-gray-100 dark:bg-gray-700 hover:bg-gray-200
-                         dark:hover:bg-gray-600 rounded-lg transition-colors flex items-center gap-1.5"
+                className="px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-slate-300
+                         bg-gray-100 dark:bg-slate-700 hover:bg-gray-200
+                         dark:hover:bg-slate-600 rounded-lg transition-colors flex items-center gap-1.5"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -196,13 +196,13 @@ export default function TransactionPreview({ data, txDetails, onConfirm, onEdit,
           {/* Prix d'achat (editable) */}
           <div>
             <div className="flex items-start gap-3">
-              <div className="text-indigo-600 dark:text-indigo-400 mt-0.5">
+              <div className="text-purple-600 dark:text-purple-400 mt-0.5">
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
               <div className="flex-1">
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                <p className="text-sm text-gray-600 dark:text-slate-400 mb-1">
                   {isSell ? 'Prix de vente' : "Prix d'achat"}
                   {editMode && (
                     <span className="ml-2 text-xs text-amber-600 dark:text-amber-400 font-medium">
@@ -219,14 +219,14 @@ export default function TransactionPreview({ data, txDetails, onConfirm, onEdit,
                       onChange={(e) => handlePriceChange(e.target.value)}
                       className="w-full px-3 py-2 text-lg font-semibold border-2 border-amber-400
                                dark:border-amber-600 rounded-lg bg-amber-50 dark:bg-amber-900/20
-                               text-gray-900 dark:text-gray-100
+                               text-gray-900 dark:text-slate-100
                                focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
                     />
                     <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm
                                     text-gray-400">EUR</span>
                   </div>
                 ) : (
-                  <p className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                  <p className="text-lg font-semibold text-gray-900 dark:text-slate-100">
                     {data.price ? formatCurrency(parseFloat(data.price)) : 'Non disponible'}
                   </p>
                 )}
@@ -238,17 +238,17 @@ export default function TransactionPreview({ data, txDetails, onConfirm, onEdit,
           {isBlockchain && (
             <div>
               <div className="flex items-start gap-3">
-                <div className="text-gray-400 dark:text-gray-500 mt-0.5">
+                <div className="text-gray-400 dark:text-slate-500 mt-0.5">
                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z" />
                   </svg>
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
+                  <p className="text-sm text-gray-500 dark:text-slate-400 mb-1">
                     Valeur estimee on-chain
                     <span className="ml-1 text-xs">(qty x prix spot)</span>
                   </p>
-                  <p className="text-lg font-medium text-gray-500 dark:text-gray-400">
+                  <p className="text-lg font-medium text-gray-500 dark:text-slate-400">
                     {formatCurrency(estimatedOnchainValue)}
                   </p>
                 </div>
@@ -265,7 +265,7 @@ export default function TransactionPreview({ data, txDetails, onConfirm, onEdit,
                 </svg>
               </div>
               <div className="flex-1">
-                <p className="text-sm text-gray-700 dark:text-gray-300 mb-1 font-medium">
+                <p className="text-sm text-gray-700 dark:text-slate-300 mb-1 font-medium">
                   {isSell ? 'Montant reellement recu (EUR)' : 'Montant reellement paye (EUR)'}
                 </p>
                 <div className="relative">
@@ -281,7 +281,7 @@ export default function TransactionPreview({ data, txDetails, onConfirm, onEdit,
                   />
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">EUR</span>
                 </div>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                <p className="text-xs text-gray-500 dark:text-slate-400 mt-1">
                   {isSell
                     ? 'Saisissez le montant exact que vous avez recu'
                     : 'Saisissez le montant exact que vous avez paye (virement, CB, etc.)'}
@@ -289,7 +289,7 @@ export default function TransactionPreview({ data, txDetails, onConfirm, onEdit,
                 {spread !== null && Math.abs(spread) > 0.01 && (
                   <p className={`text-xs mt-1 font-medium ${
                     Math.abs(spread) < amountPaidNum * 0.05
-                      ? 'text-gray-500 dark:text-gray-400'
+                      ? 'text-gray-500 dark:text-slate-400'
                       : 'text-amber-600 dark:text-amber-400'
                   }`}>
                     Ecart avec la valeur on-chain : {spread > 0 ? '+' : ''}{formatCurrency(spread)}
@@ -302,19 +302,19 @@ export default function TransactionPreview({ data, txDetails, onConfirm, onEdit,
 
           <div>
             <div className="flex items-start gap-3">
-              <div className="text-indigo-600 dark:text-indigo-400 mt-0.5">
+              <div className="text-purple-600 dark:text-purple-400 mt-0.5">
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" />
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 6h.008v.008H6V6z" />
                 </svg>
               </div>
               <div className="flex-1">
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Frais de transaction</p>
-                <p className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                <p className="text-sm text-gray-600 dark:text-slate-400 mb-1">Frais de transaction</p>
+                <p className="text-lg font-semibold text-gray-900 dark:text-slate-100">
                   {formatCurrency(parseFloat(data.fees || 0))}
                 </p>
                 {data.feesCrypto > 0 && (
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                  <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">
                     {formatQuantity(parseFloat(data.feesCrypto))} {data.assetSymbol}
                   </p>
                 )}
@@ -354,10 +354,10 @@ export default function TransactionPreview({ data, txDetails, onConfirm, onEdit,
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
               </svg>
               <div className="flex-1">
-                <h5 className="font-semibold text-gray-900 dark:text-gray-100 text-sm mb-1">
+                <h5 className="font-semibold text-gray-900 dark:text-slate-100 text-sm mb-1">
                   Mode edition active
                 </h5>
-                <p className="text-xs text-gray-700 dark:text-gray-300">
+                <p className="text-xs text-gray-700 dark:text-slate-300">
                   Corrigez le prix spot de reference si necessaire.
                   La valeur estimee on-chain sera recalculee. Le montant reellement paye n'est pas affecte.
                 </p>
@@ -369,11 +369,11 @@ export default function TransactionPreview({ data, txDetails, onConfirm, onEdit,
         {/* Recipient Address */}
         {data.recipientAddress && (
           <div className="mt-6 pt-6 border-t border-indigo-200 dark:border-indigo-800">
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+            <p className="text-sm text-gray-600 dark:text-slate-400 mb-2">
               Adresse de reception
             </p>
-            <div className="bg-white dark:bg-gray-800 rounded-lg p-3 font-mono text-xs
-                          break-all text-gray-700 dark:text-gray-300">
+            <div className="bg-white dark:bg-slate-800 rounded-lg p-3 font-mono text-xs
+                          break-all text-gray-700 dark:text-slate-300">
               {data.recipientAddress}
             </div>
           </div>
@@ -382,11 +382,11 @@ export default function TransactionPreview({ data, txDetails, onConfirm, onEdit,
         {/* Transaction Hash */}
         {data.txHash && (
           <div className={`${data.recipientAddress ? 'mt-4' : 'mt-6 pt-6 border-t border-indigo-200 dark:border-indigo-800'}`}>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+            <p className="text-sm text-gray-600 dark:text-slate-400 mb-2">
               Hash de Transaction
             </p>
-            <div className="bg-white dark:bg-gray-800 rounded-lg p-3 font-mono text-xs
-                          break-all text-gray-700 dark:text-gray-300">
+            <div className="bg-white dark:bg-slate-800 rounded-lg p-3 font-mono text-xs
+                          break-all text-gray-700 dark:text-slate-300">
               {data.txHash}
             </div>
           </div>
@@ -395,7 +395,7 @@ export default function TransactionPreview({ data, txDetails, onConfirm, onEdit,
         {/* Multi-output info */}
         {txDetails?.totalOutputs > 1 && (
           <div className="mt-4 p-3 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg">
-            <p className="text-sm text-gray-700 dark:text-gray-300">
+            <p className="text-sm text-gray-700 dark:text-slate-300">
               <svg className="w-4 h-4 inline mr-1 -mt-0.5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
               </svg>
@@ -411,7 +411,7 @@ export default function TransactionPreview({ data, txDetails, onConfirm, onEdit,
             <svg className="w-4 h-4 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
             </svg>
-            <span className="text-gray-600 dark:text-gray-400">
+            <span className="text-gray-600 dark:text-slate-400">
               {txDetails.confirmations} confirmations sur la blockchain
             </span>
           </div>
@@ -427,7 +427,7 @@ export default function TransactionPreview({ data, txDetails, onConfirm, onEdit,
               <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
             </svg>
             <div>
-              <p className="text-sm text-gray-700 dark:text-gray-300">
+              <p className="text-sm text-gray-700 dark:text-slate-300">
                 Le <strong>montant reellement paye</strong> est la source de verite pour vos calculs de performance.
                 La valeur on-chain et les frais reseau sont affiches a titre indicatif.
               </p>
@@ -444,31 +444,31 @@ export default function TransactionPreview({ data, txDetails, onConfirm, onEdit,
       )}
 
       {/* Summary Card */}
-      <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
-        <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-4">
+      <div className="bg-gray-50 dark:bg-slate-800/50 rounded-lg p-6 border border-gray-200 dark:border-slate-700">
+        <h4 className="font-semibold text-gray-900 dark:text-slate-100 mb-4">
           Resume
         </h4>
         <div className="space-y-3 text-sm">
           <div className="flex justify-between items-center">
-            <span className="text-gray-700 dark:text-gray-300 font-medium">{isSell ? 'Montant recupere' : "Cout d'acquisition"}</span>
+            <span className="text-gray-700 dark:text-slate-300 font-medium">{isSell ? 'Montant recupere' : "Cout d'acquisition"}</span>
             <span className="font-bold text-green-700 dark:text-green-400 text-base">
               {formatCurrency(amountPaidNum)}
             </span>
           </div>
           {isBlockchain && estimatedOnchainValue > 0 && (
             <>
-              <div className="flex justify-between items-center text-gray-500 dark:text-gray-400">
+              <div className="flex justify-between items-center text-gray-500 dark:text-slate-400">
                 <span>Valeur on-chain (qty x prix spot)</span>
                 <span>{formatCurrency(estimatedOnchainValue)}</span>
               </div>
               {feesEur > 0 && (
-                <div className="flex justify-between items-center text-gray-500 dark:text-gray-400">
+                <div className="flex justify-between items-center text-gray-500 dark:text-slate-400">
                   <span>Frais reseau estimes</span>
                   <span>{formatCurrency(feesEur)}</span>
                 </div>
               )}
               {spread !== null && Math.abs(spread) > 0.01 && (
-                <div className="flex justify-between items-center text-gray-400 dark:text-gray-500 italic">
+                <div className="flex justify-between items-center text-gray-400 dark:text-slate-500 italic">
                   <span>Ecart (spread / commission exchange)</span>
                   <span>{spread > 0 ? '+' : ''}{formatCurrency(spread)}</span>
                 </div>
@@ -476,15 +476,15 @@ export default function TransactionPreview({ data, txDetails, onConfirm, onEdit,
             </>
           )}
           {!isBlockchain && feesEur > 0 && (
-            <div className="flex justify-between items-center text-gray-500 dark:text-gray-400">
+            <div className="flex justify-between items-center text-gray-500 dark:text-slate-400">
               <span>dont frais</span>
               <span>{formatCurrency(feesEur)}</span>
             </div>
           )}
           {parseFloat(data.quantity) > 0 && amountPaidNum > 0 && (
-            <div className="flex justify-between items-center pt-2 border-t border-gray-200 dark:border-gray-700">
-              <span className="text-gray-600 dark:text-gray-400">Prix effectif par unite</span>
-              <span className="font-semibold text-gray-900 dark:text-gray-100">
+            <div className="flex justify-between items-center pt-2 border-t border-gray-200 dark:border-slate-700">
+              <span className="text-gray-600 dark:text-slate-400">Prix effectif par unite</span>
+              <span className="font-semibold text-gray-900 dark:text-slate-100">
                 {formatCurrency(amountPaidNum / parseFloat(data.quantity))}
               </span>
             </div>
@@ -498,10 +498,10 @@ export default function TransactionPreview({ data, txDetails, onConfirm, onEdit,
           type="button"
           onClick={() => setShowDebug(!showDebug)}
           className="w-full flex items-center justify-between px-4 py-3 text-sm
-                   text-gray-500 dark:text-gray-400 hover:text-gray-700
-                   dark:hover:text-gray-300 transition-colors rounded-lg
-                   border border-dashed border-gray-300 dark:border-gray-600
-                   hover:border-gray-400 dark:hover:border-gray-500"
+                   text-gray-500 dark:text-slate-400 hover:text-gray-700
+                   dark:hover:text-slate-300 transition-colors rounded-lg
+                   border border-dashed border-gray-300 dark:border-slate-600
+                   hover:border-gray-400 dark:hover:border-slate-500"
         >
           <div className="flex items-center gap-2">
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
@@ -681,9 +681,9 @@ export default function TransactionPreview({ data, txDetails, onConfirm, onEdit,
         <button
           onClick={onEdit}
           disabled={loading}
-          className="flex-1 py-3 px-6 border-2 border-gray-300 dark:border-gray-600
-                   text-gray-700 dark:text-gray-300 font-semibold rounded-lg
-                   hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors
+          className="flex-1 py-3 px-6 border-2 border-gray-300 dark:border-slate-600
+                   text-gray-700 dark:text-slate-300 font-semibold rounded-lg
+                   hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors
                    disabled:opacity-50 disabled:cursor-not-allowed"
         >
           &larr; Modifier
@@ -694,7 +694,7 @@ export default function TransactionPreview({ data, txDetails, onConfirm, onEdit,
           disabled={loading}
           className="flex-1 py-3 px-6 bg-green-600 hover:bg-green-700 text-white
                    font-semibold rounded-lg transition-colors
-                   disabled:bg-gray-300 dark:disabled:bg-gray-700 disabled:cursor-not-allowed
+                   disabled:bg-gray-300 dark:disabled:bg-slate-700 disabled:cursor-not-allowed
                    flex items-center justify-center gap-2"
         >
           {loading ? (
@@ -725,15 +725,15 @@ function DetailRow({ label, value, icon, highlight = false }) {
   return (
     <div className={highlight ? 'md:col-span-2' : ''}>
       <div className="flex items-start gap-3">
-        <div className="text-indigo-600 dark:text-indigo-400 mt-0.5">
+        <div className="text-purple-600 dark:text-purple-400 mt-0.5">
           {icon}
         </div>
         <div className="flex-1">
-          <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">{label}</p>
+          <p className="text-sm text-gray-600 dark:text-slate-400 mb-1">{label}</p>
           <p className={`font-semibold ${
             highlight
-              ? 'text-2xl text-indigo-600 dark:text-indigo-400'
-              : 'text-lg text-gray-900 dark:text-gray-100'
+              ? 'text-2xl text-purple-600 dark:text-purple-400'
+              : 'text-lg text-gray-900 dark:text-slate-100'
           }`}>
             {value}
           </p>

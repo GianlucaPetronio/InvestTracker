@@ -49,10 +49,10 @@ export default function ManualInput({ onSubmit, initialData, transactionType = '
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="text-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-slate-100 mb-2">
           Saisie manuelle
         </h2>
-        <p className="text-gray-600 dark:text-gray-400">
+        <p className="text-gray-600 dark:text-slate-400">
           Entrez les details de votre {isSell ? 'vente' : 'achat'}
         </p>
         {isSell && (
@@ -65,7 +65,7 @@ export default function ManualInput({ onSubmit, initialData, transactionType = '
       {/* Symbole + Nom */}
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">
             Symbole *
           </label>
           <input
@@ -73,17 +73,17 @@ export default function ManualInput({ onSubmit, initialData, transactionType = '
             value={assetSymbol}
             onChange={(e) => setAssetSymbol(e.target.value.toUpperCase())}
             placeholder="BTC, ETH, AAPL..."
-            className={`w-full border rounded-lg px-3 py-2.5 bg-white dark:bg-gray-800
-                      text-gray-900 dark:text-gray-100
-                      focus:ring-2 focus:ring-indigo-500 focus:border-transparent
-                      ${errors.assetSymbol ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`}
+            className={`w-full border rounded-lg px-3 py-2.5 bg-white dark:bg-slate-800
+                      text-gray-900 dark:text-slate-100
+                      focus:ring-2 focus:ring-purple-500 focus:border-transparent
+                      ${errors.assetSymbol ? 'border-red-500' : 'border-gray-300 dark:border-slate-600'}`}
           />
           {errors.assetSymbol && (
             <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.assetSymbol}</p>
           )}
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">
             Nom (optionnel)
           </label>
           <input
@@ -91,9 +91,9 @@ export default function ManualInput({ onSubmit, initialData, transactionType = '
             value={assetName}
             onChange={(e) => setAssetName(e.target.value)}
             placeholder="Bitcoin, Apple..."
-            className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2.5
-                     bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100
-                     focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            className="w-full border border-gray-300 dark:border-slate-600 rounded-lg px-3 py-2.5
+                     bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100
+                     focus:ring-2 focus:ring-purple-500 focus:border-transparent"
           />
         </div>
       </div>
@@ -101,32 +101,32 @@ export default function ManualInput({ onSubmit, initialData, transactionType = '
       {/* Type + Date */}
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">
             Type d'actif
           </label>
           <select
             value={assetType}
             onChange={(e) => setAssetType(e.target.value)}
-            className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2.5
-                     bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100
-                     focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            className="w-full border border-gray-300 dark:border-slate-600 rounded-lg px-3 py-2.5
+                     bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100
+                     focus:ring-2 focus:ring-purple-500 focus:border-transparent"
           >
             <option value="crypto">Crypto</option>
             <option value="traditional">Traditionnel (action, indice)</option>
           </select>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">
             Date de transaction *
           </label>
           <input
             type="datetime-local"
             value={transactionDate}
             onChange={(e) => setTransactionDate(e.target.value)}
-            className={`w-full border rounded-lg px-3 py-2.5 bg-white dark:bg-gray-800
-                      text-gray-900 dark:text-gray-100
-                      focus:ring-2 focus:ring-indigo-500 focus:border-transparent
-                      ${errors.transactionDate ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`}
+            className={`w-full border rounded-lg px-3 py-2.5 bg-white dark:bg-slate-800
+                      text-gray-900 dark:text-slate-100
+                      focus:ring-2 focus:ring-purple-500 focus:border-transparent
+                      ${errors.transactionDate ? 'border-red-500' : 'border-gray-300 dark:border-slate-600'}`}
           />
           {errors.transactionDate && (
             <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.transactionDate}</p>
@@ -137,7 +137,7 @@ export default function ManualInput({ onSubmit, initialData, transactionType = '
       {/* Prix + Quantite */}
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">
             {isSell ? 'Prix de vente (EUR) *' : 'Prix unitaire (EUR) *'}
           </label>
           <input
@@ -149,17 +149,17 @@ export default function ManualInput({ onSubmit, initialData, transactionType = '
               handlePriceOrQuantityChange(e.target.value, quantityPurchased);
             }}
             placeholder="0.00"
-            className={`w-full border rounded-lg px-3 py-2.5 bg-white dark:bg-gray-800
-                      text-gray-900 dark:text-gray-100
-                      focus:ring-2 focus:ring-indigo-500 focus:border-transparent
-                      ${errors.priceAtPurchase ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`}
+            className={`w-full border rounded-lg px-3 py-2.5 bg-white dark:bg-slate-800
+                      text-gray-900 dark:text-slate-100
+                      focus:ring-2 focus:ring-purple-500 focus:border-transparent
+                      ${errors.priceAtPurchase ? 'border-red-500' : 'border-gray-300 dark:border-slate-600'}`}
           />
           {errors.priceAtPurchase && (
             <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.priceAtPurchase}</p>
           )}
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">
             {isSell ? 'Quantite vendue *' : 'Quantite *'}
           </label>
           <input
@@ -171,10 +171,10 @@ export default function ManualInput({ onSubmit, initialData, transactionType = '
               handlePriceOrQuantityChange(priceAtPurchase, e.target.value);
             }}
             placeholder="0.00000000"
-            className={`w-full border rounded-lg px-3 py-2.5 bg-white dark:bg-gray-800
-                      text-gray-900 dark:text-gray-100
-                      focus:ring-2 focus:ring-indigo-500 focus:border-transparent
-                      ${errors.quantityPurchased ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`}
+            className={`w-full border rounded-lg px-3 py-2.5 bg-white dark:bg-slate-800
+                      text-gray-900 dark:text-slate-100
+                      focus:ring-2 focus:ring-purple-500 focus:border-transparent
+                      ${errors.quantityPurchased ? 'border-red-500' : 'border-gray-300 dark:border-slate-600'}`}
           />
           {errors.quantityPurchased && (
             <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.quantityPurchased}</p>
@@ -185,7 +185,7 @@ export default function ManualInput({ onSubmit, initialData, transactionType = '
       {/* Montant + Frais */}
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">
             {isSell ? 'Montant total recupere (EUR)' : 'Montant total investi (EUR)'}
           </label>
           <input
@@ -194,16 +194,16 @@ export default function ManualInput({ onSubmit, initialData, transactionType = '
             value={amountInvested}
             onChange={(e) => setAmountInvested(e.target.value)}
             placeholder="Calcule automatiquement"
-            className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2.5
-                     bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100
-                     focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            className="w-full border border-gray-300 dark:border-slate-600 rounded-lg px-3 py-2.5
+                     bg-gray-50 dark:bg-slate-800 text-gray-900 dark:text-slate-100
+                     focus:ring-2 focus:ring-purple-500 focus:border-transparent"
           />
-          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+          <p className="mt-1 text-xs text-gray-500 dark:text-slate-400">
             Calcule auto depuis prix x quantite
           </p>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">
             Frais de transaction
           </label>
           <input
@@ -212,9 +212,9 @@ export default function ManualInput({ onSubmit, initialData, transactionType = '
             value={transactionFees}
             onChange={(e) => setTransactionFees(e.target.value)}
             placeholder="0.00"
-            className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2.5
-                     bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100
-                     focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            className="w-full border border-gray-300 dark:border-slate-600 rounded-lg px-3 py-2.5
+                     bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100
+                     focus:ring-2 focus:ring-purple-500 focus:border-transparent"
           />
         </div>
       </div>
@@ -222,7 +222,7 @@ export default function ManualInput({ onSubmit, initialData, transactionType = '
       {/* Submit */}
       <button
         type="submit"
-        className="w-full py-4 px-6 bg-indigo-600 hover:bg-indigo-700 text-white
+        className="w-full py-4 px-6 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white
                  font-semibold rounded-lg transition-colors flex items-center justify-center gap-2"
       >
         Continuer vers la confirmation

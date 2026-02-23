@@ -33,15 +33,15 @@ function AllocationPieChart() {
     if (!active || !payload?.length) return null;
     const item = payload[0].payload;
     return (
-      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg p-3">
-        <p className="text-sm font-semibold text-gray-800 dark:text-gray-100">{item.name}</p>
+      <div className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-600 rounded-lg shadow-lg p-3">
+        <p className="text-sm font-semibold text-gray-800 dark:text-slate-100">{item.name}</p>
         {item.fullName && (
-          <p className="text-xs text-gray-400 dark:text-gray-500">{item.fullName}</p>
+          <p className="text-xs text-gray-400 dark:text-slate-500">{item.fullName}</p>
         )}
-        <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+        <p className="text-sm text-gray-600 dark:text-slate-300 mt-1">
           {formatCurrency(item.value)}
         </p>
-        <p className="text-sm font-medium text-indigo-600 dark:text-indigo-400">
+        <p className="text-sm font-medium text-indigo-600 dark:text-purple-400">
           {item.percent.toFixed(1)}%
         </p>
       </div>
@@ -69,9 +69,9 @@ function AllocationPieChart() {
 
   if (loading) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 transition-colors">
-        <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">Repartition</h2>
-        <div className="h-64 flex items-center justify-center text-gray-400 dark:text-gray-500">
+      <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-6 transition-colors">
+        <h2 className="text-lg font-semibold text-gray-800 dark:text-slate-100 mb-4">Repartition</h2>
+        <div className="h-64 flex items-center justify-center text-gray-400 dark:text-slate-500">
           Chargement...
         </div>
       </div>
@@ -80,9 +80,9 @@ function AllocationPieChart() {
 
   if (data.length === 0) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 transition-colors">
-        <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">Repartition</h2>
-        <div className="h-64 flex items-center justify-center text-gray-400 dark:text-gray-500">
+      <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-6 transition-colors">
+        <h2 className="text-lg font-semibold text-gray-800 dark:text-slate-100 mb-4">Repartition</h2>
+        <div className="h-64 flex items-center justify-center text-gray-400 dark:text-slate-500">
           Aucune donnee
         </div>
       </div>
@@ -90,8 +90,8 @@ function AllocationPieChart() {
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 transition-colors">
-      <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">Repartition</h2>
+    <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 p-6 transition-colors">
+      <h2 className="text-lg font-semibold text-gray-800 dark:text-slate-100 mb-4">Repartition</h2>
       <ResponsiveContainer width="100%" height={280}>
         <PieChart>
           <Pie
@@ -120,7 +120,7 @@ function AllocationPieChart() {
             iconType="circle"
             iconSize={8}
             formatter={(value) => (
-              <span className="text-sm text-gray-600 dark:text-gray-300">{value}</span>
+              <span className="text-sm text-gray-600 dark:text-slate-300">{value}</span>
             )}
           />
         </PieChart>

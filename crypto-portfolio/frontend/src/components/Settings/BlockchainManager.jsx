@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { getBlockchains, createBlockchain, updateBlockchain, deleteBlockchain, toggleBlockchain } from '../../services/api';
+import Button from '../ui/Button';
+import Card from '../ui/Card';
 
 const LOGO_SYMBOL_MAP = {
   BTC: 'btc', ETH: 'eth', XRP: 'xrp', SOL: 'sol', BSC: 'bnb',
@@ -54,7 +56,7 @@ export default function BlockchainManager() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-16">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500" />
       </div>
     );
   }
@@ -63,21 +65,17 @@ export default function BlockchainManager() {
     <div>
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-slate-100">
             Gestion des Blockchains
           </h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">
+          <p className="text-gray-600 dark:text-slate-400 mt-1">
             {blockchains.filter(b => b.is_active).length} actives sur {blockchains.length} configurees
           </p>
         </div>
-        <button
-          onClick={() => { setEditingBlockchain(null); setShowModal(true); }}
-          className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold
-                   rounded-lg transition-colors flex items-center gap-2"
-        >
+        <Button onClick={() => { setEditingBlockchain(null); setShowModal(true); }}>
           <span className="text-lg">+</span>
           Ajouter
-        </button>
+        </Button>
       </div>
 
       {/* Blockchain Grid */}
@@ -85,10 +83,10 @@ export default function BlockchainManager() {
         {blockchains.map((bc) => (
           <div
             key={bc.symbol}
-            className={`bg-white dark:bg-gray-800 rounded-lg shadow-sm border-2 p-5 transition-all
+            className={`bg-white dark:bg-slate-800 rounded-lg shadow-sm border-2 p-5 transition-all
               ${bc.is_active
-                ? 'border-gray-200 dark:border-gray-700'
-                : 'border-gray-200 dark:border-gray-700 opacity-50'
+                ? 'border-gray-200 dark:border-slate-700'
+                : 'border-gray-200 dark:border-slate-700 opacity-50'
               }`}
           >
             {/* Header */}
@@ -105,10 +103,10 @@ export default function BlockchainManager() {
                 />
                 <span className="text-3xl" style={{ display: 'none' }}>{bc.icon}</span>
                 <div>
-                  <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-slate-100">
                     {bc.symbol}
                   </h3>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">{bc.name}</p>
+                  <p className="text-sm text-gray-500 dark:text-slate-400">{bc.name}</p>
                 </div>
               </div>
               <div className="flex flex-col gap-1 items-end">
@@ -119,8 +117,8 @@ export default function BlockchainManager() {
                   </span>
                 )}
                 {!bc.is_active && (
-                  <span className="px-2 py-0.5 bg-gray-200 dark:bg-gray-700 text-gray-500
-                               dark:text-gray-400 text-xs font-semibold rounded">
+                  <span className="px-2 py-0.5 bg-gray-200 dark:bg-slate-700 text-gray-500
+                               dark:text-slate-400 text-xs font-semibold rounded">
                     Inactive
                   </span>
                 )}
@@ -131,11 +129,11 @@ export default function BlockchainManager() {
             <div className="space-y-1.5 text-sm mb-4">
               <div className="flex items-center gap-2">
                 <span className="text-gray-400">API:</span>
-                <span className="text-gray-700 dark:text-gray-300 font-medium">{bc.api_type}</span>
+                <span className="text-gray-700 dark:text-slate-300 font-medium">{bc.api_type}</span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-gray-400">Actif natif:</span>
-                <span className="text-gray-700 dark:text-gray-300 font-medium">{bc.asset_symbol}</span>
+                <span className="text-gray-700 dark:text-slate-300 font-medium">{bc.asset_symbol}</span>
               </div>
               {bc.needs_recipient_address && (
                 <p className="text-xs text-amber-600 dark:text-amber-400">
@@ -148,8 +146,8 @@ export default function BlockchainManager() {
             <div className="flex gap-2">
               <button
                 onClick={() => { setEditingBlockchain(bc); setShowModal(true); }}
-                className="flex-1 py-2 px-3 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200
-                         dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg
+                className="flex-1 py-2 px-3 bg-gray-100 dark:bg-slate-700 hover:bg-gray-200
+                         dark:hover:bg-slate-600 text-gray-700 dark:text-slate-300 rounded-lg
                          text-sm font-medium transition-colors"
               >
                 Modifier
@@ -244,15 +242,15 @@ function BlockchainFormModal({ blockchain, onClose, onSave }) {
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
          onClick={onClose}>
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-2xl w-full
+      <div className="bg-white dark:bg-slate-800 rounded-xl shadow-2xl max-w-2xl w-full
                     max-h-[90vh] overflow-y-auto p-6"
            onClick={(e) => e.stopPropagation()}>
 
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-slate-100">
             {isEdit ? `Modifier ${blockchain.symbol}` : 'Ajouter une blockchain'}
           </h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-2xl">
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-slate-200 text-2xl">
             &times;
           </button>
         </div>
@@ -268,7 +266,7 @@ function BlockchainFormModal({ blockchain, onClose, onSave }) {
           {/* Identite */}
           <div className="grid grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">
                 Symbol *
               </label>
               <input
@@ -279,13 +277,13 @@ function BlockchainFormModal({ blockchain, onClose, onSave }) {
                 required
                 disabled={isEdit}
                 maxLength={10}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg
-                         bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100
+                className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg
+                         bg-white dark:bg-slate-700 text-gray-900 dark:text-slate-100
                          disabled:opacity-50 disabled:cursor-not-allowed"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">
                 Icone
               </label>
               <input
@@ -293,12 +291,12 @@ function BlockchainFormModal({ blockchain, onClose, onSave }) {
                 value={formData.icon}
                 onChange={(e) => handleChange('icon', e.target.value)}
                 maxLength={10}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg
-                         bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-2xl text-center"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg
+                         bg-white dark:bg-slate-700 text-gray-900 dark:text-slate-100 text-2xl text-center"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">
                 Actif natif
               </label>
               <input
@@ -307,14 +305,14 @@ function BlockchainFormModal({ blockchain, onClose, onSave }) {
                 onChange={(e) => handleChange('asset_symbol', e.target.value.toUpperCase())}
                 placeholder={formData.symbol || 'ETH'}
                 maxLength={10}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg
-                         bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg
+                         bg-white dark:bg-slate-700 text-gray-900 dark:text-slate-100"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">
               Nom complet *
             </label>
             <input
@@ -323,20 +321,20 @@ function BlockchainFormModal({ blockchain, onClose, onSave }) {
               onChange={(e) => handleChange('name', e.target.value)}
               placeholder="Bitcoin, Ethereum..."
               required
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg
-                       bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg
+                       bg-white dark:bg-slate-700 text-gray-900 dark:text-slate-100"
             />
           </div>
 
           {/* Validation patterns */}
-          <fieldset className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-            <legend className="text-sm font-semibold text-gray-700 dark:text-gray-300 px-2">
+          <fieldset className="border border-gray-200 dark:border-slate-700 rounded-lg p-4">
+            <legend className="text-sm font-semibold text-gray-700 dark:text-slate-300 px-2">
               Validation (Regex)
             </legend>
 
             <div className="space-y-3">
               <div>
-                <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">
+                <label className="block text-sm text-gray-600 dark:text-slate-400 mb-1">
                   Pattern du hash de transaction *
                 </label>
                 <input
@@ -345,13 +343,13 @@ function BlockchainFormModal({ blockchain, onClose, onSave }) {
                   onChange={(e) => handleChange('hash_pattern', e.target.value)}
                   placeholder="^0x[a-fA-F0-9]{64}$"
                   required
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg
-                           bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 font-mono text-sm"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg
+                           bg-white dark:bg-slate-700 text-gray-900 dark:text-slate-100 font-mono text-sm"
                 />
               </div>
 
               <div>
-                <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">
+                <label className="block text-sm text-gray-600 dark:text-slate-400 mb-1">
                   Pattern de l'adresse
                 </label>
                 <input
@@ -359,12 +357,12 @@ function BlockchainFormModal({ blockchain, onClose, onSave }) {
                   value={formData.address_pattern}
                   onChange={(e) => handleChange('address_pattern', e.target.value)}
                   placeholder="^0x[a-fA-F0-9]{40}$"
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg
-                           bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 font-mono text-sm"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg
+                           bg-white dark:bg-slate-700 text-gray-900 dark:text-slate-100 font-mono text-sm"
                 />
               </div>
 
-              <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+              <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-slate-300">
                 <input
                   type="checkbox"
                   checked={formData.needs_recipient_address}
@@ -377,22 +375,22 @@ function BlockchainFormModal({ blockchain, onClose, onSave }) {
           </fieldset>
 
           {/* API config */}
-          <fieldset className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-            <legend className="text-sm font-semibold text-gray-700 dark:text-gray-300 px-2">
+          <fieldset className="border border-gray-200 dark:border-slate-700 rounded-lg p-4">
+            <legend className="text-sm font-semibold text-gray-700 dark:text-slate-300 px-2">
               Configuration API
             </legend>
 
             <div className="space-y-3">
               <div>
-                <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">
+                <label className="block text-sm text-gray-600 dark:text-slate-400 mb-1">
                   Type d'API *
                 </label>
                 <select
                   value={formData.api_type}
                   onChange={(e) => handleChange('api_type', e.target.value)}
                   required
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg
-                           bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg
+                           bg-white dark:bg-slate-700 text-gray-900 dark:text-slate-100"
                 >
                   <option value="unsupported">Non supporte (saisie manuelle)</option>
                   <option value="bitcoin">Bitcoin (Blockchain.info)</option>
@@ -403,7 +401,7 @@ function BlockchainFormModal({ blockchain, onClose, onSave }) {
               {formData.api_type !== 'unsupported' && (
                 <>
                   <div>
-                    <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">
+                    <label className="block text-sm text-gray-600 dark:text-slate-400 mb-1">
                       URL de l'API
                     </label>
                     <input
@@ -411,12 +409,12 @@ function BlockchainFormModal({ blockchain, onClose, onSave }) {
                       value={formData.api_url}
                       onChange={(e) => handleChange('api_url', e.target.value)}
                       placeholder="https://api.etherscan.io/api"
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg
-                               bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg
+                               bg-white dark:bg-slate-700 text-gray-900 dark:text-slate-100"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">
+                    <label className="block text-sm text-gray-600 dark:text-slate-400 mb-1">
                       Variable d'env pour la cle API
                     </label>
                     <input
@@ -424,8 +422,8 @@ function BlockchainFormModal({ blockchain, onClose, onSave }) {
                       value={formData.api_key_env_var}
                       onChange={(e) => handleChange('api_key_env_var', e.target.value)}
                       placeholder="ETHERSCAN_API_KEY"
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg
-                               bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 font-mono text-sm"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg
+                               bg-white dark:bg-slate-700 text-gray-900 dark:text-slate-100 font-mono text-sm"
                     />
                   </div>
                 </>
@@ -435,24 +433,22 @@ function BlockchainFormModal({ blockchain, onClose, onSave }) {
 
           {/* Buttons */}
           <div className="flex gap-3 pt-2">
-            <button
+            <Button
               type="button"
+              variant="secondary"
               onClick={onClose}
-              className="flex-1 py-2.5 px-4 border-2 border-gray-300 dark:border-gray-600
-                       text-gray-700 dark:text-gray-300 font-semibold rounded-lg
-                       hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+              className="flex-1"
             >
               Annuler
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
               disabled={saving}
-              className="flex-1 py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-300
-                       dark:disabled:bg-gray-700 text-white font-semibold rounded-lg
-                       transition-colors disabled:cursor-not-allowed"
+              loading={saving}
+              className="flex-1"
             >
               {saving ? 'Enregistrement...' : isEdit ? 'Mettre a jour' : 'Ajouter'}
-            </button>
+            </Button>
           </div>
         </form>
       </div>
