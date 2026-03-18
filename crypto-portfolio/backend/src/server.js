@@ -1,5 +1,5 @@
 // =============================================================================
-// Server Express - Point d'entrée du backend
+// Server Express - Point d'entree du backend
 // =============================================================================
 
 const express = require('express');
@@ -16,7 +16,6 @@ const transactionsRouter = require('./routes/transactions');
 const assetsRouter = require('./routes/assets');
 const portfolioRouter = require('./routes/portfolio');
 const blockchainRouter = require('./routes/blockchain');
-const blockchainsRouter = require('./routes/blockchains');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -89,7 +88,6 @@ app.use('/api/transactions', authenticateToken, transactionsRouter);
 app.use('/api/assets', authenticateToken, assetsRouter);
 app.use('/api/portfolio', authenticateToken, portfolioRouter);
 app.use('/api/blockchain', authenticateToken, blockchainRouter);
-app.use('/api/blockchains', authenticateToken, blockchainsRouter);
 
 // Route de sante
 app.get('/api/health', (_req, res) => {

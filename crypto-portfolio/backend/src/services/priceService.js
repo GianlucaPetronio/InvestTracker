@@ -72,7 +72,7 @@ async function getMultiplePrices(assetSymbols) {
   const response = await axios.get(`${API_CONFIG.coingecko.baseUrl}/simple/price`, {
     params: {
       ids: coinIds.join(','),
-      vs_currencies: 'eur',
+      vs_currencies: 'eur,usd',
       include_24hr_change: true,
     },
   });
@@ -83,6 +83,7 @@ async function getMultiplePrices(assetSymbols) {
     if (coinId && response.data[coinId]) {
       results[symbol] = {
         price: response.data[coinId].eur,
+        priceUsd: response.data[coinId].usd || null,
         change24h: response.data[coinId].eur_24h_change || 0,
       };
     }

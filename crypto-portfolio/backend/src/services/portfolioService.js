@@ -11,25 +11,13 @@ const { getMultiplePrices } = require('./priceService');
 const USE_DEMO = process.env.NODE_ENV !== 'production';
 
 const DEMO_TRANSACTIONS = [
-  { id: 1, asset_symbol: 'BTC', asset_name: 'Bitcoin', asset_type: 'crypto', transaction_date: '2025-06-15T10:00:00Z', amount_invested: 5000, price_at_purchase: 62500, quantity_purchased: 0.08, transaction_fees: 2.5, source: 'blockchain', blockchain: 'BTC', transaction_hash: 'abc123...demo', created_at: '2025-06-15T10:00:00Z' },
-  { id: 2, asset_symbol: 'BTC', asset_name: 'Bitcoin', asset_type: 'crypto', transaction_date: '2025-08-20T14:00:00Z', amount_invested: 3000, price_at_purchase: 58000, quantity_purchased: 0.05172, transaction_fees: 1.8, source: 'manual', blockchain: null, transaction_hash: null, created_at: '2025-08-20T14:00:00Z' },
-  { id: 3, asset_symbol: 'ETH', asset_name: 'Ethereum', asset_type: 'crypto', transaction_date: '2025-07-10T09:00:00Z', amount_invested: 4000, price_at_purchase: 3400, quantity_purchased: 1.17647, transaction_fees: 3.2, source: 'blockchain', blockchain: 'ETH', transaction_hash: '0xdef456...demo', created_at: '2025-07-10T09:00:00Z' },
-  { id: 4, asset_symbol: 'ETH', asset_name: 'Ethereum', asset_type: 'crypto', transaction_date: '2025-10-05T16:00:00Z', amount_invested: 2500, price_at_purchase: 3100, quantity_purchased: 0.80645, transaction_fees: 2.1, source: 'manual', blockchain: null, transaction_hash: null, created_at: '2025-10-05T16:00:00Z' },
-  { id: 5, asset_symbol: 'SOL', asset_name: 'Solana', asset_type: 'crypto', transaction_date: '2025-09-01T12:00:00Z', amount_invested: 2000, price_at_purchase: 145, quantity_purchased: 13.7931, transaction_fees: 0.5, source: 'manual', blockchain: null, transaction_hash: null, created_at: '2025-09-01T12:00:00Z' },
-  { id: 6, asset_symbol: 'ADA', asset_name: 'Cardano', asset_type: 'crypto', transaction_date: '2025-11-12T08:00:00Z', amount_invested: 1500, price_at_purchase: 0.62, quantity_purchased: 2419.35, transaction_fees: 0.3, source: 'manual', blockchain: null, transaction_hash: null, created_at: '2025-11-12T08:00:00Z' },
-  { id: 7, asset_symbol: 'AAPL', asset_name: 'Apple Inc.', asset_type: 'traditional', transaction_date: '2025-07-25T15:00:00Z', amount_invested: 3500, price_at_purchase: 198, quantity_purchased: 17.6767, transaction_fees: 5.0, source: 'manual', blockchain: null, transaction_hash: null, created_at: '2025-07-25T15:00:00Z' },
-  { id: 8, asset_symbol: 'BNB', asset_name: 'Binance Coin', asset_type: 'crypto', transaction_date: '2025-12-01T11:00:00Z', amount_invested: 1000, price_at_purchase: 620, quantity_purchased: 1.6129, transaction_fees: 0.8, source: 'blockchain', blockchain: 'BSC', transaction_hash: '0xghi789...demo', created_at: '2025-12-01T11:00:00Z' },
-  { id: 9, asset_symbol: 'ETH', asset_name: 'Ethereum', asset_type: 'crypto', transaction_date: '2026-01-15T10:00:00Z', amount_invested: 1800, price_at_purchase: 3250, quantity_purchased: 0.55385, transaction_fees: 1.5, source: 'manual', blockchain: null, transaction_hash: null, created_at: '2026-01-15T10:00:00Z' },
-  { id: 10, asset_symbol: 'BTC', asset_name: 'Bitcoin', asset_type: 'crypto', transaction_date: '2026-02-01T09:00:00Z', amount_invested: 2000, price_at_purchase: 97000, quantity_purchased: 0.02062, transaction_fees: 1.2, source: 'manual', blockchain: null, transaction_hash: null, created_at: '2026-02-01T09:00:00Z' },
+  { id: 1, asset_symbol: 'BTC', asset_name: 'Bitcoin', asset_type: 'crypto', transaction_date: '2025-06-15T10:00:00Z', amount_invested: 5000, price_at_purchase: 62500, quantity_purchased: 0.08, transaction_fees: 2.5, source: 'blockchain', blockchain: 'BTC', transaction_hash: 'abc123...demo', transaction_type: 'buy', created_at: '2025-06-15T10:00:00Z' },
+  { id: 2, asset_symbol: 'BTC', asset_name: 'Bitcoin', asset_type: 'crypto', transaction_date: '2025-08-20T14:00:00Z', amount_invested: 3000, price_at_purchase: 58000, quantity_purchased: 0.05172, transaction_fees: 1.8, source: 'manual', blockchain: null, transaction_hash: null, transaction_type: 'buy', created_at: '2025-08-20T14:00:00Z' },
+  { id: 3, asset_symbol: 'BTC', asset_name: 'Bitcoin', asset_type: 'crypto', transaction_date: '2026-02-01T09:00:00Z', amount_invested: 2000, price_at_purchase: 97000, quantity_purchased: 0.02062, transaction_fees: 1.2, source: 'manual', blockchain: null, transaction_hash: null, transaction_type: 'buy', created_at: '2026-02-01T09:00:00Z' },
 ];
 
-// Simuler des prix actuels pour le mode démo
 const DEMO_PRICES = {
   BTC: { price: 97500, change24h: 2.3 },
-  ETH: { price: 3380, change24h: -1.1 },
-  SOL: { price: 195, change24h: 5.7 },
-  ADA: { price: 0.78, change24h: 3.2 },
-  BNB: { price: 685, change24h: 0.8 },
 };
 
 // Helper : tenter une requête DB, fallback sur demo
@@ -195,10 +183,10 @@ async function calculateAssetBreakdown(userId) {
 
     totalPortfolioValue += currentValue;
 
-    return { asset, qty, invested, totalFees, totalCost, avgPrice, currentPrice, currentValue, txCount, change24h: priceData?.change24h || 0 };
+    return { asset, qty, invested, totalFees, totalCost, avgPrice, currentPrice, currentValue, txCount, change24h: priceData?.change24h || 0, priceUsd: priceData?.priceUsd || null };
   });
 
-  return enrichedAssets.map(({ asset, qty, invested, totalFees, totalCost, avgPrice, currentPrice, currentValue, txCount, change24h }) => {
+  return enrichedAssets.map(({ asset, qty, invested, totalFees, totalCost, avgPrice, currentPrice, currentValue, txCount, change24h, priceUsd }) => {
     const profitLoss = currentPrice ? currentValue - totalCost : 0;
     const profitLossPercent = totalCost > 0 && currentPrice ? (profitLoss / totalCost) * 100 : 0;
     const weight = totalPortfolioValue > 0 ? (currentValue / totalPortfolioValue) * 100 : 0;
@@ -217,6 +205,7 @@ async function calculateAssetBreakdown(userId) {
       profitLossPercent,
       weight,
       change24h,
+      priceUsd,
       txCount,
     };
   });
@@ -516,6 +505,79 @@ async function calculateAssetHistory(userId, period) {
   return histories;
 }
 
+// ---------------------------------------------------------------------------
+// Calcul des plus-values FIFO (First In, First Out)
+// ---------------------------------------------------------------------------
+async function calculateCapitalGains(userId) {
+  const result = await tryQuery(`
+    SELECT
+      id, asset_symbol, transaction_date, quantity_purchased,
+      price_at_purchase, amount_invested, transaction_fees,
+      COALESCE(transaction_type, 'buy') as transaction_type
+    FROM transactions
+    WHERE user_id = $1
+    ORDER BY transaction_date ASC, id ASC
+  `, [userId]);
+
+  const transactions = result ? result.rows : [...DEMO_TRANSACTIONS].sort(
+    (a, b) => new Date(a.transaction_date) - new Date(b.transaction_date)
+  );
+
+  // FIFO queue: each entry = { qty, pricePerUnit (including fees) }
+  const buyQueue = [];
+  const gains = []; // list of realized gains per sell
+  let totalRealized = 0;
+
+  for (const tx of transactions) {
+    const qty = parseFloat(tx.quantity_purchased);
+    const price = parseFloat(tx.price_at_purchase);
+    const fees = parseFloat(tx.transaction_fees || 0);
+
+    if (tx.transaction_type === 'buy') {
+      // Cost basis per unit = (amount_invested + fees) / qty
+      const totalCost = parseFloat(tx.amount_invested || price * qty) + fees;
+      buyQueue.push({ qty, costPerUnit: totalCost / qty });
+    } else if (tx.transaction_type === 'sell') {
+      // Sell: consume from FIFO queue
+      let remaining = qty;
+      let costBasis = 0;
+      const sellRevenue = parseFloat(tx.amount_invested || price * qty) - fees;
+
+      while (remaining > 0 && buyQueue.length > 0) {
+        const oldest = buyQueue[0];
+        const consumed = Math.min(remaining, oldest.qty);
+        costBasis += consumed * oldest.costPerUnit;
+        oldest.qty -= consumed;
+        remaining -= consumed;
+
+        if (oldest.qty <= 0.00000001) {
+          buyQueue.shift();
+        }
+      }
+
+      const gain = sellRevenue - costBasis;
+      totalRealized += gain;
+
+      gains.push({
+        date: tx.transaction_date,
+        quantity: qty,
+        sellPrice: price,
+        costBasis,
+        revenue: sellRevenue,
+        gain,
+        transactionId: tx.id,
+      });
+    }
+  }
+
+  return {
+    totalRealized,
+    sells: gains,
+    unrealizedCostBasis: buyQueue.reduce((sum, b) => sum + b.qty * b.costPerUnit, 0),
+    unrealizedQuantity: buyQueue.reduce((sum, b) => sum + b.qty, 0),
+  };
+}
+
 module.exports = {
   calculateGlobalStats,
   calculateAssetBreakdown,
@@ -523,4 +585,5 @@ module.exports = {
   calculateAllocation,
   getRecentTransactions,
   calculateAssetHistory,
+  calculateCapitalGains,
 };

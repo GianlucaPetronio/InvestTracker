@@ -2,38 +2,17 @@
 // Fonctions de validation (hash, formats, montants)
 // =============================================================================
 
-const blockchainManager = require('../services/blockchainManager');
-
-// ---------------------------------------------------------------------------
-// Fonctions utilitaires sync (legacy, pour validation rapide sans DB)
-// ---------------------------------------------------------------------------
-
 function isValidBitcoinHash(hash) {
   return /^[a-fA-F0-9]{64}$/.test(hash);
 }
 
-function isValidEthereumHash(hash) {
-  return /^0x[a-fA-F0-9]{64}$/.test(hash);
+function isValidTransactionHash(hash) {
+  return isValidBitcoinHash(hash);
 }
 
-// ---------------------------------------------------------------------------
-// Fonctions async basees sur la configuration DB
-// ---------------------------------------------------------------------------
-
-async function isValidTransactionHash(hash, blockchain) {
-  const config = await blockchainManager.getBlockchainBySymbol(blockchain);
-  if (!config) return false;
-  return blockchainManager.validateHash(hash, config);
+function isSupportedBlockchain(blockchain) {
+  return blockchain === 'BTC';
 }
-
-async function isSupportedBlockchain(blockchain) {
-  const config = await blockchainManager.getBlockchainBySymbol(blockchain);
-  return config !== null && config.is_active;
-}
-
-// ---------------------------------------------------------------------------
-// Validation de transaction manuelle
-// ---------------------------------------------------------------------------
 
 function validateManualTransaction(data) {
   const errors = [];
@@ -59,7 +38,6 @@ function validateManualTransaction(data) {
 
 module.exports = {
   isValidBitcoinHash,
-  isValidEthereumHash,
   isValidTransactionHash,
   isSupportedBlockchain,
   validateManualTransaction,

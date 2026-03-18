@@ -1,40 +1,26 @@
 import { useState, useEffect } from 'react';
-import { getTransactions, deleteTransaction, deleteTransactionsBulk } from '../services/api';
+import { getTransactions, deleteTransaction, deleteTransactionsBulk, exportTransactionsCsv } from '../services/api';
 import { formatCurrency, formatQuantity } from '../utils/calculations';
 import Button from './ui/Button';
 import Card from './ui/Card';
+import ConfirmDialog from './ui/ConfirmDialog';
 import EditTransactionModal from './EditTransactionModal';
 
 /**
- * Liste complète des transactions avec filtres, modification et suppression.
+ * Liste complete des transactions Bitcoin.
  */
 function TransactionHistory() {
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState('all'); // 'all', 'crypto', 'traditional'
-  const [assetFilter, setAssetFilter] = useState('all');
-  const [availableAssets, setAvailableAssets] = useState([]);
   const [editingTx, setEditingTx] = useState(null);
   const [selected, setSelected] = useState(new Set());
   const [deleting, setDeleting] = useState(false);
-
-  // Fetch all transactions once on mount to build the available assets list
-  useEffect(() => {
-    async function fetchAllAssets() {
-      try {
-        const response = await getTransactions({});
-        const symbols = [...new Set(response.data.map(tx => tx.asset_symbol))].sort();
-        setAvailableAssets(symbols);
-      } catch {
-        // ignore
-      }
-    }
-    fetchAllAssets();
-  }, []);
+  const [confirmDelete, setConfirmDelete] = useState(null); // { type: 'single'|'bulk', id?: number }
+  const [errorMsg, setErrorMsg] = useState(null);
 
   useEffect(() => {
     fetchTransactions();
-  }, [filter, assetFilter]);
+  }, []);
 
   // Vider la selection quand les transactions changent
   useEffect(() => {
@@ -44,10 +30,7 @@ function TransactionHistory() {
   async function fetchTransactions() {
     setLoading(true);
     try {
-      const params = {};
-      if (filter !== 'all') params.asset_type = filter;
-      if (assetFilter !== 'all') params.asset_symbol = assetFilter;
-      const response = await getTransactions(params);
+      const response = await getTransactions({});
       setTransactions(response.data);
     } catch {
       setTransactions([]);
@@ -56,29 +39,37 @@ function TransactionHistory() {
     }
   }
 
-  async function handleDelete(id) {
-    if (!window.confirm('Supprimer cette transaction ?')) return;
-    try {
-      await deleteTransaction(id);
-      setTransactions(prev => prev.filter(tx => tx.id !== id));
-    } catch {
-      alert('Erreur lors de la suppression');
-    }
+  function requestDelete(id) {
+    setConfirmDelete({ type: 'single', id });
   }
 
-  async function handleBulkDelete() {
-    const count = selected.size;
-    if (!window.confirm(`Supprimer ${count} transaction(s) ?`)) return;
-    setDeleting(true);
-    try {
-      const ids = [...selected];
-      await deleteTransactionsBulk(ids);
-      setTransactions(prev => prev.filter(tx => !selected.has(tx.id)));
-    } catch {
-      alert('Erreur lors de la suppression');
-    } finally {
-      setDeleting(false);
+  function requestBulkDelete() {
+    setConfirmDelete({ type: 'bulk' });
+  }
+
+  async function executeDelete() {
+    if (!confirmDelete) return;
+
+    if (confirmDelete.type === 'single') {
+      try {
+        await deleteTransaction(confirmDelete.id);
+        setTransactions(prev => prev.filter(tx => tx.id !== confirmDelete.id));
+      } catch {
+        setErrorMsg('Erreur lors de la suppression');
+      }
+    } else {
+      setDeleting(true);
+      try {
+        const ids = [...selected];
+        await deleteTransactionsBulk(ids);
+        setTransactions(prev => prev.filter(tx => !selected.has(tx.id)));
+      } catch {
+        setErrorMsg('Erreur lors de la suppression');
+      } finally {
+        setDeleting(false);
+      }
     }
+    setConfirmDelete(null);
   }
 
   function toggleSelect(id) {
@@ -103,6 +94,20 @@ function TransactionHistory() {
     fetchTransactions();
   }
 
+  async function handleExportCsv() {
+    try {
+      const response = await exportTransactionsCsv();
+      const url = window.URL.createObjectURL(response.data);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `transactions_btc_${new Date().toISOString().split('T')[0]}.csv`;
+      a.click();
+      window.URL.revokeObjectURL(url);
+    } catch {
+      setErrorMsg('Erreur lors de l\'export CSV');
+    }
+  }
+
   const allSelected = transactions.length > 0 && selected.size === transactions.length;
   const someSelected = selected.size > 0;
 
@@ -110,35 +115,14 @@ function TransactionHistory() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold text-gray-800 dark:text-slate-100">Historique des transactions</h1>
-
-        {/* Filtres */}
-        <div className="flex items-center space-x-3">
-          <div className="flex space-x-2">
-            {['all', 'crypto', 'traditional'].map((f) => (
-              <button
-                key={f}
-                onClick={() => setFilter(f)}
-                className={`px-3 py-1 rounded-full text-sm transition-colors ${
-                  filter === f
-                    ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white'
-                    : 'bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-slate-300 hover:bg-gray-200 dark:hover:bg-slate-600'
-                }`}
-              >
-                {f === 'all' ? 'Tout' : f === 'crypto' ? 'Crypto' : 'Traditionnel'}
-              </button>
-            ))}
-          </div>
-          <select
-            value={assetFilter}
-            onChange={(e) => setAssetFilter(e.target.value)}
-            className="px-3 py-1 rounded-lg text-sm border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-purple-500"
-          >
-            <option value="all">Tous les actifs</option>
-            {availableAssets.map((symbol) => (
-              <option key={symbol} value={symbol}>{symbol}</option>
-            ))}
-          </select>
-        </div>
+        {transactions.length > 0 && (
+          <Button variant="ghost" size="sm" onClick={handleExportCsv}>
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+            </svg>
+            Export CSV
+          </Button>
+        )}
       </div>
 
       {/* Barre d'actions de selection */}
@@ -150,7 +134,7 @@ function TransactionHistory() {
           <Button
             variant="danger"
             size="sm"
-            onClick={handleBulkDelete}
+            onClick={requestBulkDelete}
             disabled={deleting}
             loading={deleting}
             className="ml-auto"
@@ -191,7 +175,7 @@ function TransactionHistory() {
                     />
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase">Date</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase">Actif</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase">Type</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase">Source</th>
                   <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-slate-400 uppercase">Quantite</th>
                   <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-slate-400 uppercase">Prix</th>
@@ -220,15 +204,7 @@ function TransactionHistory() {
                       {new Date(tx.transaction_date).toLocaleDateString('fr-FR')}
                     </td>
                     <td className="px-4 py-3">
-                      <span className="font-medium text-gray-900 dark:text-slate-100">{tx.asset_symbol}</span>
-                      <span className={`ml-2 text-xs px-2 py-0.5 rounded-full ${
-                        tx.asset_type === 'crypto'
-                          ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400'
-                          : 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'
-                      }`}>
-                        {tx.asset_type}
-                      </span>
-                      <span className={`ml-1 text-xs px-2 py-0.5 rounded-full font-semibold ${
+                      <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${
                         tx.transaction_type === 'sell'
                           ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
                           : 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400'
@@ -269,7 +245,7 @@ function TransactionHistory() {
                           </svg>
                         </button>
                         <button
-                          onClick={() => handleDelete(tx.id)}
+                          onClick={() => requestDelete(tx.id)}
                           className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 transition-colors"
                           title="Supprimer"
                         >
@@ -294,6 +270,28 @@ function TransactionHistory() {
           onClose={() => setEditingTx(null)}
           onSaved={handleEditSaved}
         />
+      )}
+
+      {/* Confirmation de suppression */}
+      <ConfirmDialog
+        open={!!confirmDelete}
+        title="Supprimer"
+        message={
+          confirmDelete?.type === 'bulk'
+            ? `Supprimer ${selected.size} transaction(s) selectionnee(s) ?`
+            : 'Supprimer cette transaction ?'
+        }
+        confirmLabel="Supprimer"
+        onConfirm={executeDelete}
+        onCancel={() => setConfirmDelete(null)}
+      />
+
+      {/* Toast d'erreur */}
+      {errorMsg && (
+        <div className="fixed bottom-4 right-4 z-50 bg-red-600 text-white px-4 py-3 rounded-lg shadow-lg flex items-center gap-3 animate-fade-in">
+          <span className="text-sm font-medium">{errorMsg}</span>
+          <button onClick={() => setErrorMsg(null)} className="text-white/80 hover:text-white">&times;</button>
+        </div>
       )}
     </div>
   );

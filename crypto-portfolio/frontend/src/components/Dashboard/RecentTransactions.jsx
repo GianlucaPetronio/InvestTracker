@@ -4,19 +4,7 @@ import { getRecentTransactions } from '../../services/api';
 import { formatCurrency, formatQuantity } from '../../utils/calculations';
 import EditTransactionModal from '../EditTransactionModal';
 
-// Mapping symbole -> slug pour les logos CDN
-const LOGO_SYMBOL_MAP = {
-  BTC: 'btc', ETH: 'eth', BNB: 'bnb', SOL: 'sol',
-  ADA: 'ada', DOT: 'dot', AVAX: 'avax', MATIC: 'matic',
-  LINK: 'link', UNI: 'uni', DOGE: 'doge', XRP: 'xrp',
-  LTC: 'ltc', ATOM: 'atom', NEAR: 'near', APT: 'apt',
-  ARB: 'arb', OP: 'op', FTM: 'ftm', ALGO: 'algo', TRX: 'trx',
-};
-
-function getLogoUrl(symbol) {
-  const s = LOGO_SYMBOL_MAP[symbol] || symbol.toLowerCase();
-  return `https://assets.coincap.io/assets/icons/${s}@2x.png`;
-}
+const BTC_LOGO_URL = 'https://assets.coincap.io/assets/icons/btc@2x.png';
 
 function timeAgo(dateStr) {
   const date = new Date(dateStr);
@@ -104,25 +92,18 @@ function RecentTransactions() {
                 className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors group"
               >
                 {/* Logo actif */}
-                <div className="w-10 h-10 rounded-full flex items-center justify-center overflow-hidden bg-gray-100 dark:bg-slate-700 flex-shrink-0">
+                <div className="w-10 h-10 rounded-full flex items-center justify-center overflow-hidden bg-orange-100 dark:bg-orange-900/40 flex-shrink-0">
                   <img
-                    src={getLogoUrl(tx.asset_symbol)}
-                    alt={tx.asset_symbol}
+                    src={BTC_LOGO_URL}
+                    alt="BTC"
                     className="w-8 h-8"
                     onError={(e) => {
                       e.target.style.display = 'none';
                       e.target.nextElementSibling.style.display = '';
                     }}
                   />
-                  <span
-                    style={{ display: 'none' }}
-                    className={`text-sm font-bold ${
-                      tx.asset_type === 'crypto'
-                        ? 'text-purple-700 dark:text-purple-400'
-                        : 'text-blue-700 dark:text-blue-400'
-                    }`}
-                  >
-                    {tx.asset_symbol.charAt(0)}
+                  <span style={{ display: 'none' }} className="text-sm font-bold text-orange-700 dark:text-orange-300">
+                    {'\u20BF'}
                   </span>
                 </div>
 

@@ -1,23 +1,7 @@
 import { useState } from 'react';
 import { formatCurrency, formatPercent, formatQuantity } from '../../utils/calculations';
 
-// Mapping symbole -> slug pour les logos CDN
-const LOGO_SYMBOL_MAP = {
-  BTC: 'btc', ETH: 'eth', BNB: 'bnb', SOL: 'sol',
-  ADA: 'ada', DOT: 'dot', AVAX: 'avax', MATIC: 'matic',
-  LINK: 'link', UNI: 'uni', DOGE: 'doge', XRP: 'xrp',
-  LTC: 'ltc', ATOM: 'atom', NEAR: 'near', APT: 'apt',
-  ARB: 'arb', OP: 'op', FTM: 'ftm', ALGO: 'algo', TRX: 'trx',
-};
-
-function getLogoUrl(symbol) {
-  const s = LOGO_SYMBOL_MAP[symbol] || symbol.toLowerCase();
-  return `https://assets.coincap.io/assets/icons/${s}@2x.png`;
-}
-
 function AssetsTable({ assets = [] }) {
-  const [sortKey, setSortKey] = useState('weight');
-  const [sortAsc, setSortAsc] = useState(false);
   const [hoveredFees, setHoveredFees] = useState(null);
 
   if (assets.length === 0) {
@@ -28,67 +12,28 @@ function AssetsTable({ assets = [] }) {
     );
   }
 
-  function handleSort(key) {
-    if (sortKey === key) {
-      setSortAsc(!sortAsc);
-    } else {
-      setSortKey(key);
-      setSortAsc(false);
-    }
-  }
-
-  const sorted = [...assets].sort((a, b) => {
-    const valA = a[sortKey] ?? 0;
-    const valB = b[sortKey] ?? 0;
-    if (typeof valA === 'string') {
-      return sortAsc ? valA.localeCompare(valB) : valB.localeCompare(valA);
-    }
-    return sortAsc ? valA - valB : valB - valA;
-  });
-
-  const columns = [
-    { key: 'symbol', label: 'Actif', align: 'left' },
-    { key: 'quantity', label: 'Quantite', align: 'right' },
-    { key: 'avgPrice', label: 'Prix Moyen', align: 'right', hideOnMobile: true },
-    { key: 'invested', label: 'Investi', align: 'right' },
-    { key: 'totalFees', label: 'Frais', align: 'right' },
-    { key: 'currentValue', label: 'Valeur Actuelle', align: 'right', hideOnMobile: true },
-    { key: 'profitLoss', label: 'P&L', align: 'right' },
-    { key: 'weight', label: 'Poids', align: 'right', hideOnMobile: true },
-  ];
-
   return (
     <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 overflow-hidden transition-colors">
       <div className="px-6 py-4 border-b border-gray-100 dark:border-slate-700">
-        <h2 className="text-lg font-semibold text-gray-800 dark:text-slate-100">Actifs du portfolio</h2>
+        <h2 className="text-lg font-semibold text-gray-800 dark:text-slate-100">Bitcoin</h2>
       </div>
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
             <tr className="bg-gray-50/50 dark:bg-slate-700/50">
-              {columns.map(col => (
-                <th
-                  key={col.key}
-                  onClick={() => handleSort(col.key)}
-                  className={`px-4 py-3 text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider cursor-pointer hover:text-gray-700 dark:hover:text-slate-200 select-none ${
-                    col.align === 'right' ? 'text-right' : 'text-left'
-                  } ${col.hideOnMobile ? 'hidden md:table-cell' : ''}`}
-                >
-                  <span className="inline-flex items-center gap-1">
-                    {col.label}
-                    {sortKey === col.key && (
-                      <span className="text-purple-500 dark:text-purple-400">{sortAsc ? '\u2191' : '\u2193'}</span>
-                    )}
-                  </span>
-                </th>
-              ))}
+              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Actif</th>
+              <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Quantite</th>
+              <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider hidden md:table-cell">Prix Moyen</th>
+              <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Investi</th>
+              <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Frais</th>
+              <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider hidden md:table-cell">Valeur Actuelle</th>
+              <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">P&L</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-50 dark:divide-slate-700/50">
-            {sorted.map(asset => {
+            {assets.map(asset => {
               const isPositive = asset.profitLoss >= 0;
               const pnlColor = isPositive ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400';
-              const fallbackIcon = asset.symbol.charAt(0);
               const rawInvested = asset.invested - (asset.totalFees || 0);
 
               return (
@@ -96,21 +41,21 @@ function AssetsTable({ assets = [] }) {
                   {/* Actif */}
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-purple-300 flex items-center justify-center text-sm font-bold overflow-hidden">
+                      <div className="w-8 h-8 rounded-full bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300 flex items-center justify-center text-sm font-bold overflow-hidden">
                         <img
-                          src={getLogoUrl(asset.symbol)}
-                          alt={asset.symbol}
+                          src="https://assets.coincap.io/assets/icons/btc@2x.png"
+                          alt="BTC"
                           className="w-8 h-8"
                           onError={(e) => {
                             e.target.style.display = 'none';
                             e.target.nextElementSibling.style.display = '';
                           }}
                         />
-                        <span style={{ display: 'none' }}>{fallbackIcon}</span>
+                        <span style={{ display: 'none' }}>{'\u20BF'}</span>
                       </div>
                       <div>
                         <p className="font-semibold text-gray-900 dark:text-slate-100">{asset.symbol}</p>
-                        <p className="text-xs text-gray-400 dark:text-slate-500">{asset.name || asset.type}</p>
+                        <p className="text-xs text-gray-400 dark:text-slate-500">{asset.name || 'Bitcoin'}</p>
                       </div>
                     </div>
                   </td>
@@ -168,21 +113,6 @@ function AssetsTable({ assets = [] }) {
                     ) : (
                       <span className="text-gray-400 dark:text-slate-500 text-sm">-</span>
                     )}
-                  </td>
-
-                  {/* Poids */}
-                  <td className="px-4 py-3 text-right hidden md:table-cell">
-                    <div className="flex items-center justify-end gap-2">
-                      <div className="w-16 bg-gray-100 dark:bg-slate-700 rounded-full h-1.5">
-                        <div
-                          className="bg-purple-500 h-1.5 rounded-full transition-all"
-                          style={{ width: `${Math.min(asset.weight, 100)}%` }}
-                        />
-                      </div>
-                      <span className="text-xs text-gray-500 dark:text-slate-400 w-10 text-right">
-                        {asset.weight.toFixed(1)}%
-                      </span>
-                    </div>
                   </td>
                 </tr>
               );

@@ -4,8 +4,6 @@
 
 import axios from 'axios';
 
-// En développement, le proxy Vite redirige /api vers le backend
-// En production, configurer l'URL de base du backend
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || '/api',
   timeout: 15000,
@@ -73,6 +71,9 @@ export const updateTransaction = (id, data) =>
 export const deleteTransaction = (id) =>
   api.delete(`/transactions/${id}`);
 
+export const exportTransactionsCsv = () =>
+  api.get('/transactions/export/csv', { responseType: 'blob' });
+
 export const createTransactionsBulk = (transactions) =>
   api.post('/transactions/bulk', { transactions });
 
@@ -109,49 +110,22 @@ export const getPortfolioAllocation = () =>
 export const getRecentTransactions = (limit = 5) =>
   api.get('/portfolio/recent-transactions', { params: { limit } });
 
+export const getCapitalGains = () =>
+  api.get('/portfolio/capital-gains');
+
 export const getAssetsHistory = (period = 'ALL') =>
   api.get('/portfolio/assets-history', { params: { period } });
 
 // ---------------------------------------------------------------------------
-// Blockchain - Vérification de transactions
+// Blockchain - Verification de transactions (BTC uniquement)
 // ---------------------------------------------------------------------------
-export const verifyBlockchainTx = (txHash, blockchain) =>
-  api.post('/blockchain/verify', { txHash, blockchain });
+export const verifyBlockchainTx = (txHash) =>
+  api.post('/blockchain/verify', { txHash });
 
-export const validateBlockchainTx = (txHash, blockchain, recipientAddress = null) =>
-  api.post('/blockchain/validate', { txHash, blockchain, recipientAddress });
+export const validateBlockchainTx = (txHash, recipientAddress = null) =>
+  api.post('/blockchain/validate', { txHash, recipientAddress });
 
-export const detectBlockchain = (hash) =>
-  api.get(`/blockchain/detect/${encodeURIComponent(hash)}`);
-
-export const getTransactionOutputs = (blockchain, hash) =>
-  api.get(`/blockchain/outputs/${blockchain}/${encodeURIComponent(hash)}`);
-
-// ---------------------------------------------------------------------------
-// Blockchains - Gestion des blockchains supportées
-// ---------------------------------------------------------------------------
-export const getBlockchains = (includeInactive = false) =>
-  api.get('/blockchains', { params: { includeInactive } });
-
-export const getBlockchain = (symbol) =>
-  api.get(`/blockchains/${symbol}`);
-
-export const createBlockchain = (data) =>
-  api.post('/blockchains', data);
-
-export const updateBlockchain = (symbol, data) =>
-  api.put(`/blockchains/${symbol}`, data);
-
-export const deleteBlockchain = (symbol) =>
-  api.delete(`/blockchains/${symbol}`);
-
-export const toggleBlockchain = (symbol) =>
-  api.post(`/blockchains/${symbol}/toggle`);
-
-export const saveBlockchainApiKey = (symbol, apiKey, label = null) =>
-  api.post(`/blockchains/${symbol}/api-key`, { api_key: apiKey, label });
-
-export const removeBlockchainApiKey = (symbol) =>
-  api.delete(`/blockchains/${symbol}/api-key`);
+export const getTransactionOutputs = (hash) =>
+  api.get(`/blockchain/outputs/BTC/${encodeURIComponent(hash)}`);
 
 export default api;

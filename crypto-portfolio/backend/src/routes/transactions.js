@@ -133,6 +133,46 @@ router.post('/bulk', async (req, res) => {
 });
 
 // ---------------------------------------------------------------------------
+// GET /api/transactions/export/csv - Export CSV
+// ---------------------------------------------------------------------------
+router.get('/export/csv', async (req, res) => {
+  try {
+    const result = await query(
+      'SELECT * FROM transactions WHERE user_id = $1 ORDER BY transaction_date DESC',
+      [req.user.id]
+    );
+
+    const rows = result.rows;
+    const headers = ['Date', 'Type', 'Actif', 'Quantite', 'Prix unitaire', 'Montant investi', 'Frais', 'Source', 'Hash'];
+    const csvLines = [headers.join(';')];
+
+    for (const tx of rows) {
+      const line = [
+        new Date(tx.transaction_date).toLocaleDateString('fr-FR'),
+        tx.transaction_type === 'sell' ? 'Vente' : 'Achat',
+        tx.asset_symbol,
+        tx.quantity_purchased,
+        tx.price_at_purchase,
+        tx.amount_invested || '',
+        tx.transaction_fees || 0,
+        tx.source === 'blockchain' ? 'Blockchain' : 'Manuel',
+        tx.transaction_hash || '',
+      ].map(v => `"${String(v).replace(/"/g, '""')}"`).join(';');
+      csvLines.push(line);
+    }
+
+    const csv = '\uFEFF' + csvLines.join('\r\n');
+    const filename = `transactions_btc_${new Date().toISOString().split('T')[0]}.csv`;
+
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.send(csv);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ---------------------------------------------------------------------------
 // GET /api/transactions/:id - Détail d'une transaction
 // ---------------------------------------------------------------------------
 router.get('/:id', async (req, res) => {

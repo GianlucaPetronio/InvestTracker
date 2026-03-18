@@ -2,9 +2,6 @@ import { useState } from 'react';
 
 export default function ManualInput({ onSubmit, initialData, transactionType = 'buy' }) {
   const isSell = transactionType === 'sell';
-  const [assetSymbol, setAssetSymbol] = useState(initialData.assetSymbol || '');
-  const [assetName, setAssetName] = useState(initialData.assetName || '');
-  const [assetType, setAssetType] = useState('crypto');
   const [transactionDate, setTransactionDate] = useState(initialData.date || '');
   const [priceAtPurchase, setPriceAtPurchase] = useState(initialData.price || '');
   const [quantityPurchased, setQuantityPurchased] = useState(initialData.quantity || '');
@@ -22,7 +19,6 @@ export default function ManualInput({ onSubmit, initialData, transactionType = '
 
   const validate = () => {
     const newErrors = {};
-    if (!assetSymbol.trim()) newErrors.assetSymbol = 'Symbole requis';
     if (!transactionDate) newErrors.transactionDate = 'Date requise';
     if (!priceAtPurchase || parseFloat(priceAtPurchase) <= 0) newErrors.priceAtPurchase = 'Prix invalide';
     if (!quantityPurchased || parseFloat(quantityPurchased) <= 0) newErrors.quantityPurchased = 'Quantite invalide';
@@ -35,9 +31,9 @@ export default function ManualInput({ onSubmit, initialData, transactionType = '
     if (!validate()) return;
 
     onSubmit({
-      assetSymbol: assetSymbol.toUpperCase(),
-      assetName: assetName || assetSymbol.toUpperCase(),
-      assetType,
+      assetSymbol: 'BTC',
+      assetName: 'Bitcoin',
+      assetType: 'crypto',
       date: transactionDate,
       price: parseFloat(priceAtPurchase),
       quantity: parseFloat(quantityPurchased),
@@ -50,10 +46,10 @@ export default function ManualInput({ onSubmit, initialData, transactionType = '
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="text-center mb-6">
         <h2 className="text-2xl font-bold text-gray-900 dark:text-slate-100 mb-2">
-          Saisie manuelle
+          Saisie manuelle - Bitcoin
         </h2>
         <p className="text-gray-600 dark:text-slate-400">
-          Entrez les details de votre {isSell ? 'vente' : 'achat'}
+          Entrez les details de votre {isSell ? 'vente' : 'achat'} BTC
         </p>
         {isSell && (
           <span className="inline-block mt-2 px-3 py-1 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 text-sm font-semibold rounded-full">
@@ -62,76 +58,23 @@ export default function ManualInput({ onSubmit, initialData, transactionType = '
         )}
       </div>
 
-      {/* Symbole + Nom */}
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">
-            Symbole *
-          </label>
-          <input
-            type="text"
-            value={assetSymbol}
-            onChange={(e) => setAssetSymbol(e.target.value.toUpperCase())}
-            placeholder="BTC, ETH, AAPL..."
-            className={`w-full border rounded-lg px-3 py-2.5 bg-white dark:bg-slate-800
-                      text-gray-900 dark:text-slate-100
-                      focus:ring-2 focus:ring-purple-500 focus:border-transparent
-                      ${errors.assetSymbol ? 'border-red-500' : 'border-gray-300 dark:border-slate-600'}`}
-          />
-          {errors.assetSymbol && (
-            <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.assetSymbol}</p>
-          )}
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">
-            Nom (optionnel)
-          </label>
-          <input
-            type="text"
-            value={assetName}
-            onChange={(e) => setAssetName(e.target.value)}
-            placeholder="Bitcoin, Apple..."
-            className="w-full border border-gray-300 dark:border-slate-600 rounded-lg px-3 py-2.5
-                     bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100
-                     focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-          />
-        </div>
-      </div>
-
-      {/* Type + Date */}
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">
-            Type d'actif
-          </label>
-          <select
-            value={assetType}
-            onChange={(e) => setAssetType(e.target.value)}
-            className="w-full border border-gray-300 dark:border-slate-600 rounded-lg px-3 py-2.5
-                     bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100
-                     focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-          >
-            <option value="crypto">Crypto</option>
-            <option value="traditional">Traditionnel (action, indice)</option>
-          </select>
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">
-            Date de transaction *
-          </label>
-          <input
-            type="datetime-local"
-            value={transactionDate}
-            onChange={(e) => setTransactionDate(e.target.value)}
-            className={`w-full border rounded-lg px-3 py-2.5 bg-white dark:bg-slate-800
-                      text-gray-900 dark:text-slate-100
-                      focus:ring-2 focus:ring-purple-500 focus:border-transparent
-                      ${errors.transactionDate ? 'border-red-500' : 'border-gray-300 dark:border-slate-600'}`}
-          />
-          {errors.transactionDate && (
-            <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.transactionDate}</p>
-          )}
-        </div>
+      {/* Date */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">
+          Date de transaction *
+        </label>
+        <input
+          type="datetime-local"
+          value={transactionDate}
+          onChange={(e) => setTransactionDate(e.target.value)}
+          className={`w-full border rounded-lg px-3 py-2.5 bg-white dark:bg-slate-800
+                    text-gray-900 dark:text-slate-100
+                    focus:ring-2 focus:ring-purple-500 focus:border-transparent
+                    ${errors.transactionDate ? 'border-red-500' : 'border-gray-300 dark:border-slate-600'}`}
+        />
+        {errors.transactionDate && (
+          <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.transactionDate}</p>
+        )}
       </div>
 
       {/* Prix + Quantite */}
@@ -160,7 +103,7 @@ export default function ManualInput({ onSubmit, initialData, transactionType = '
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">
-            {isSell ? 'Quantite vendue *' : 'Quantite *'}
+            {isSell ? 'Quantite vendue (BTC) *' : 'Quantite (BTC) *'}
           </label>
           <input
             type="number"

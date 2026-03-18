@@ -1,19 +1,17 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { getPortfolioStats, getPortfolioAssets } from '../../services/api';
+import { getPortfolioStats, getPortfolioAssets, getCapitalGains } from '../../services/api';
 import Button from '../ui/Button';
 import StatsCards from './StatsCards';
 import PortfolioChart from './PortfolioChart';
-import AssetEvolutionChart from './AssetEvolutionChart';
 import AssetsTable from './AssetsTable';
-import AllocationPieChart from './AllocationPieChart';
 import RecentTransactions from './RecentTransactions';
-import PriceTicker from './PriceTicker';
 
 function Dashboard() {
   const location = useLocation();
   const [stats, setStats] = useState(null);
   const [assets, setAssets] = useState([]);
+  const [capitalGains, setCapitalGains] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
@@ -21,12 +19,14 @@ function Dashboard() {
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
-      const [statsRes, assetsRes] = await Promise.all([
+      const [statsRes, assetsRes, gainsRes] = await Promise.all([
         getPortfolioStats(),
         getPortfolioAssets(),
+        getCapitalGains().catch(() => ({ data: null })),
       ]);
       setStats(statsRes.data);
       setAssets(assetsRes.data);
+      setCapitalGains(gainsRes.data);
       setError(null);
     } catch (err) {
       setError(err.response?.data?.error || 'Erreur lors du chargement du dashboard');
@@ -39,13 +39,11 @@ function Dashboard() {
     fetchData();
   }, [fetchData]);
 
-  // Afficher le message de succès après ajout d'une transaction
+  // Afficher le message de succes apres ajout d'une transaction
   useEffect(() => {
     if (location.state?.message) {
       setSuccessMessage(location.state.message);
-      // Effacer le message après 5 secondes
       const timer = setTimeout(() => setSuccessMessage(null), 5000);
-      // Nettoyer le state pour éviter de réafficher au refresh
       window.history.replaceState({}, document.title);
       return () => clearTimeout(timer);
     }
@@ -87,7 +85,7 @@ function Dashboard() {
           Votre portfolio est vide
         </h2>
         <p className="text-gray-500 dark:text-slate-400 mb-6 max-w-md mx-auto">
-          Ajoutez votre premiere transaction pour commencer a suivre vos investissements crypto et traditionnels.
+          Ajoutez votre premiere transaction Bitcoin pour commencer a suivre vos investissements.
         </p>
         <Button as={Link} to="/add" size="lg">
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
@@ -101,7 +99,7 @@ function Dashboard() {
 
   return (
     <div className="space-y-6">
-      {/* Message de succès */}
+      {/* Message de succes */}
       {successMessage && (
         <div className="bg-green-50 dark:bg-green-900/20 border-2 border-green-500
                       dark:border-green-400 text-green-800 dark:text-green-200
@@ -129,26 +127,15 @@ function Dashboard() {
         </Button>
       </div>
 
-      {/* Bandeau defilant des prix */}
-      <PriceTicker />
-
       {/* Cartes statistiques */}
-      <StatsCards stats={stats} />
+      <StatsCards stats={stats} btcPrice={assets[0]?.currentPrice} btcPriceUsd={assets[0]?.priceUsd} btcChange24h={assets[0]?.change24h} capitalGains={capitalGains} />
 
-      {/* Graphique d'evolution globale */}
+      {/* Graphique d'evolution du portfolio */}
       <PortfolioChart />
 
-      {/* Graphique d'evolution par actif */}
-      <AssetEvolutionChart assets={assets} />
-
-      {/* Section deux colonnes : Pie chart + Transactions recentes */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <AllocationPieChart />
-        <RecentTransactions />
-      </div>
-
-      {/* Tableau des actifs */}
+      {/* Tableau des actifs + Transactions recentes */}
       <AssetsTable assets={assets} />
+      <RecentTransactions />
     </div>
   );
 }

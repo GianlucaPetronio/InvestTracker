@@ -4,7 +4,6 @@ import Layout from './components/layout/Layout';
 import Dashboard from './components/Dashboard/Dashboard';
 import AddTransactionWizard from './components/TransactionForm/AddTransactionWizard';
 import TransactionHistory from './components/TransactionHistory';
-import BlockchainManager from './components/Settings/BlockchainManager';
 import ProtectedRoute from './components/ProtectedRoute';
 import LoginPage from './components/Auth/LoginPage';
 
@@ -64,14 +63,6 @@ function App() {
           element={
             <ProtectedRoute>
               <Layout><TransactionHistory /></Layout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/settings/blockchains"
-          element={
-            <ProtectedRoute>
-              <Layout><BlockchainManager /></Layout>
             </ProtectedRoute>
           }
         />

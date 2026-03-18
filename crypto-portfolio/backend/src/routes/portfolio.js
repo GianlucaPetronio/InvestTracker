@@ -11,6 +11,7 @@ const {
   calculateAllocation,
   getRecentTransactions,
   calculateAssetHistory,
+  calculateCapitalGains,
 } = require('../services/portfolioService');
 
 // ---------------------------------------------------------------------------
@@ -100,6 +101,18 @@ router.get('/assets-history', async (req, res) => {
 
     const history = await calculateAssetHistory(req.user.id, period);
     res.json(history);
+  } catch (error) {
+    res.status(500).json({ error: 'Erreur interne du serveur' });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// GET /api/portfolio/capital-gains - Plus-values realisees (FIFO)
+// ---------------------------------------------------------------------------
+router.get('/capital-gains', async (req, res) => {
+  try {
+    const gains = await calculateCapitalGains(req.user.id);
+    res.json(gains);
   } catch (error) {
     res.status(500).json({ error: 'Erreur interne du serveur' });
   }
